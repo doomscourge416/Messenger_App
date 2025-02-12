@@ -1,0 +1,40 @@
+{
+  "name": "messenger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "client-install": "npm install --prefix client",
+    "build": "npm run build --prefix client",
+    "client": "npm start --prefix client",
+    "server": "nodemon server/server.js",
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.12.0",
+    "nodemailer": "^6.10.0",
+    "pg": "^8.13.1",
+    "sequelize": "^6.37.5",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/sequelize": "^4.28.20",
+    "eslint": "^9.19.0",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.4.2",
+    "sequelize-cli": "^6.6.2"
+  }
+}
