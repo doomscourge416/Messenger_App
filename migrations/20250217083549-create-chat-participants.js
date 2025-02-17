@@ -2,16 +2,28 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Chats', {
+    await queryInterface.createTable('ChatParticipants', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      type: {
-        type: Sequelize.ENUM('private', 'group'),
-        defaultValue: 'private',
+      chatId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Chats',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+      },
+      userId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
       },
       createdAt: {
         allowNull: false,
@@ -25,6 +37,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Chats');
+    await queryInterface.dropTable('ChatParticipants');
   },
 };

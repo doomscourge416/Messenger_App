@@ -1,0 +1,311 @@
+1. Регистрация пользователя  
+
+curl -X POST http://localhost:5000/api/auth/register \
+-H "Content-Type: application/json" \
+-d '{"email":"newuser@example.com","nickname":"newuser","password":"password123"}'
+ 
+Ответ:  
+{
+  "message": "Пользователь успешно зарегистрирован"
+}
+ 
+ 
+2. Вход в систему  
+
+
+curl -X POST http://localhost:5000/api/auth/login \
+-H "Content-Type: application/json" \
+-d '{"email":"newuser@example.com","password":"password123"}'
+
+Ответ:  
+{
+  "token": "your_jwt_token_here"
+}
+ 
+Сохраните токен (token), так как он понадобится для защищенных маршрутов. 
+
+3. Проверка защищенного маршрута  
+
+curl -X GET http://localhost:5000/api/auth/protected \
+-H "Authorization: Bearer your_jwt_token_here"
+ 
+Ответ:  
+{
+  "message": "Этот маршрут защищен",
+  "userId": 1
+}
+ 
+ 
+4. Создание чата  
+Создание группового чата: 
+
+curl -X POST http://localhost:5000/api/chats/create \
+-H "Authorization: Bearer your_jwt_token_here" \
+-H "Content-Type: application/json" \
+-d '{"participants":[2,3],"type":"group"}'
+ 
+ 
+Создание личного чата: 
+
+curl -X POST http://localhost:5000/api/chats/create \
+-H "Authorization: Bearer your_jwt_token_here" \
+-H "Content-Type: application/json" \
+-d '{"participants":[2],"type":"private"}'
+ 
+Ответ:  
+{
+  "message": "Чат успешно создан",
+  "chat": {
+    "id": 1,
+    "type": "group",
+    "createdAt": "2023-03-20T12:00:00.000Z",
+    "updatedAt": "2023-03-20T12:00:00.000Z"
+  }
+}
+ 
+ 
+5. Изменение никнейма  
+
+curl -X PUT http://localhost:5000/api/user/nickname \
+-H "Authorization: Bearer your_jwt_token_here" \
+-H "Content-Type: application/json" \
+-d '{"newNickname":"newusername"}'
+ 
+Ответ:  
+{
+  "message": "Никнейм успешно изменен",
+  "user": {
+    "nickname": "newusername"
+  }
+}
+ 
+ 
+6. Обновление аватара  
+
+curl -X PUT http://localhost:5000/api/user/avatar \
+-H "Authorization: Bearer your_jwt_token_here" \
+-H "Content-Type: application/json" \
+-d '{"avatarUrl":"https://example.com/avatar.jpg"}'
+ 
+Ответ:  
+{
+  "message": "Аватар успешно обновлен",
+  "user": {
+    "avatarUrl": "https://example.com/avatar.jpg"
+  }
+}
+ 
+ 
+7. Переключение видимости email  
+
+curl -X PUT http://localhost:5000/api/user/email-visibility \
+-H "Authorization: Bearer your_jwt_token_here"
+
+Ответ:  
+{
+  "message": "Настройки email успешно обновлены",
+  "user": {
+    "isEmailVisible": true
+  }
+}
+ 
+ 
+8. Получение списка контактов  
+
+curl -X GET http://localhost:5000/api/user/contacts \
+-H "Authorization: Bearer your_jwt_token_here"
+ 
+Ответ:  
+{
+  "contacts": [
+    {
+      "id": 2,
+      "nickname": "contact1",
+      "avatarUrl": "https://example.com/avatar1.jpg"
+    },
+    {
+      "id": 3,
+      "nickname": "contact2",
+      "avatarUrl": "https://example.com/avatar2.jpg"
+    }
+  ]
+}
+ 
+ 
+9. Добавление контакта  
+
+curl -X POST http://localhost:5000/api/user/contacts \
+-H "Authorization: Bearer your_jwt_token_here" \
+-H "Content-Type: application/json" \
+-d '{"contactId":2}'
+
+Ответ:  
+{
+  "message": "Контакт успешно добавлен"
+}
+ 
+ 
+10. Удаление контакта  
+
+curl -X DELETE http://localhost:5000/api/user/contacts/2 \
+-H "Authorization: Bearer your_jwt_token_here"
+
+Ответ:  
+{
+  "message": "Контакт успешно удален"
+}
+ 
+ 
+11. Отправка сообщения  
+
+curl -X POST http://localhost:5000/api/messages/send \
+-H "Authorization: Bearer your_jwt_token_here" \
+-H "Content-Type: application/json" \
+-d '{"chatId":1,"content":"Hello, world!"}'
+ 
+Ответ:  
+{
+  "message": "Сообщение успешно отправлено",
+  "message": {
+    "id": 1,
+    "content": "Hello, world!",
+    "senderId": 1,
+    "chatId": 1,
+    "createdAt": "2023-03-20T12:00:00.000Z",
+    "updatedAt": "2023-03-20T12:00:00.000Z"
+  }
+}
+ 
+ 
+12. Получение сообщений из чата  
+
+curl -X GET http://localhost:5000/api/messages/chat/1 \
+-H "Authorization: Bearer your_jwt_token_here"
+
+Ответ:  
+{
+  "messages": [
+    {
+      "id": 1,
+      "content": "Hello, world!",
+      "senderId": 1,
+      "chatId": 1,
+      "createdAt": "2023-03-20T12:00:00.000Z",
+      "updatedAt": "2023-03-20T12:00:00.000Z"
+    }
+  ]
+}
+ 
+ 
+13. Редактирование сообщения  
+
+curl -X PUT http://localhost:5000/api/messages/edit/1 \
+-H "Authorization: Bearer your_jwt_token_here" \
+-H "Content-Type: application/json" \
+-d '{"newContent":"Updated message"}'
+ 
+Ответ:  
+{
+  "message": "Сообщение успешно отредактировано",
+  "message": {
+    "id": 1,
+    "content": "Updated message",
+    "senderId": 1,
+    "chatId": 1,
+    "createdAt": "2023-03-20T12:00:00.000Z",
+    "updatedAt": "2023-03-20T12:10:00.000Z"
+  }
+}
+ 
+ 
+14. Удаление сообщения  
+
+curl -X DELETE http://localhost:5000/api/messages/delete/1 \
+-H "Authorization: Bearer your_jwt_token_here"
+ 
+Ответ:  
+{
+  "message": "Сообщение успешно удалено"
+}
+ 
+ 
+15. Пересылка сообщения  
+
+curl -X POST http://localhost:5000/api/messages/forward \
+-H "Authorization: Bearer your_jwt_token_here" \
+-H "Content-Type: application/json" \
+-d '{"messageId":1,"recipientId":2}'
+ 
+Ответ:  
+{
+  "message": "Сообщение успешно переслано"
+}
+ 
+ 
+16. Настройка уведомлений для чата  
+Включение уведомлений: 
+
+curl -X POST http://localhost:5000/api/chats/notifications/enable/1 \
+-H "Authorization: Bearer your_jwt_token_here"
+ 
+Ответ:  
+{
+  "message": "Уведомления для чата включены"
+}
+ 
+ 
+Отключение уведомлений: 
+
+curl -X POST http://localhost:5000/api/chats/notifications/disable/1 \
+-H "Authorization: Bearer your_jwt_token_here"
+
+Ответ:  
+{
+  "message": "Уведомления для чата отключены"
+}
+ 
+ 
+17. Получение списка чатов  
+
+curl -X GET http://localhost:5000/api/chats/list \
+-H "Authorization: Bearer your_jwt_token_here"
+
+Ответ:  
+{
+  "chats": [
+    {
+      "id": 1,
+      "type": "group",
+      "participants": [1, 2, 3]
+    },
+    {
+      "id": 2,
+      "type": "private",
+      "participants": [1, 2]
+    }
+  ]
+}
+ 
+ 
+18. Выход из системы  
+
+curl -X POST http://localhost:5000/api/auth/logout \
+-H "Authorization: Bearer your_jwt_token_here"
+ 
+Ответ:  
+{
+  "message": "Вы успешно вышли из системы"
+}
+ 
+ 
+Примечания  
+
+    JWT-токен :
+    Замените your_jwt_token_here на реальный токен, полученный при входе. 
+
+    ID пользователей и чатов :
+    Замените 1, 2, 3 на реальные ID пользователей или чатов из вашей базы данных. 
+
+    WebSocket :
+    Для тестирования WebSocket вам потребуется специальный инструмент (например, wscat ) или клиентский код. 
+     

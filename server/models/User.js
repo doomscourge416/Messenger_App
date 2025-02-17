@@ -57,6 +57,15 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'contactId',
       });
     }
+
+    if (models.Chat) {
+      User.belongsToMany(models.Chat, {
+        through: 'ChatParticipants',
+        as: 'chats',
+        foreignKey: 'userId',
+        otherKey: 'chatId',
+      });
+    }
   };
 
   User.prototype.setPassword = async function (password) {

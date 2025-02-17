@@ -10,7 +10,7 @@ let transporter = nodemailer.createTransport({
 });
 
 module.exports = async (to, subject, html) => {
-    from: `"Мессенджер" <${process.env.EMAIL_USER}`,
+    from: `"Мессенджер" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html
