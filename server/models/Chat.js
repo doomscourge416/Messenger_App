@@ -28,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
         through: 'ChatParticipants',
         as: 'participants',
         foreignKey: 'chatId',
+        otherKey: 'userId',
       });
     }
   };

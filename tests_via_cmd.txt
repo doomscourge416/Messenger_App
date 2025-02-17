@@ -1,4 +1,4 @@
-1. Регистрация пользователя  
+TODO:1. Регистрация пользователя  
 
 curl -X POST http://localhost:5000/api/auth/register \
 -H "Content-Type: application/json" \
@@ -10,8 +10,7 @@ curl -X POST http://localhost:5000/api/auth/register \
 }
  
  
-2. Вход в систему  
-
+TODO:2. Вход в систему  
 
 curl -X POST http://localhost:5000/api/auth/login \
 -H "Content-Type: application/json" \
@@ -24,7 +23,7 @@ curl -X POST http://localhost:5000/api/auth/login \
  
 Сохраните токен (token), так как он понадобится для защищенных маршрутов. 
 
-3. Проверка защищенного маршрута  
+TODO:3. Проверка защищенного маршрута  
 
 curl -X GET http://localhost:5000/api/auth/protected \
 -H "Authorization: Bearer your_jwt_token_here"
@@ -36,7 +35,7 @@ curl -X GET http://localhost:5000/api/auth/protected \
 }
  
  
-4. Создание чата  
+TODO:4. Создание чата  
 Создание группового чата: 
 
 curl -X POST http://localhost:5000/api/chats/create \
@@ -64,7 +63,7 @@ curl -X POST http://localhost:5000/api/chats/create \
 }
  
  
-5. Изменение никнейма  
+TODO:5. Изменение никнейма  
 
 curl -X PUT http://localhost:5000/api/user/nickname \
 -H "Authorization: Bearer your_jwt_token_here" \
@@ -80,7 +79,7 @@ curl -X PUT http://localhost:5000/api/user/nickname \
 }
  
  
-6. Обновление аватара  
+TODO:6. Обновление аватара  
 
 curl -X PUT http://localhost:5000/api/user/avatar \
 -H "Authorization: Bearer your_jwt_token_here" \
@@ -96,7 +95,7 @@ curl -X PUT http://localhost:5000/api/user/avatar \
 }
  
  
-7. Переключение видимости email  
+TODO:7. Переключение видимости email  
 
 curl -X PUT http://localhost:5000/api/user/email-visibility \
 -H "Authorization: Bearer your_jwt_token_here"
@@ -110,7 +109,7 @@ curl -X PUT http://localhost:5000/api/user/email-visibility \
 }
  
  
-8. Получение списка контактов  
+TODO:8. Получение списка контактов  
 
 curl -X GET http://localhost:5000/api/user/contacts \
 -H "Authorization: Bearer your_jwt_token_here"
@@ -132,7 +131,7 @@ curl -X GET http://localhost:5000/api/user/contacts \
 }
  
  
-9. Добавление контакта  
+TODO:9. Добавление контакта  
 
 curl -X POST http://localhost:5000/api/user/contacts \
 -H "Authorization: Bearer your_jwt_token_here" \
@@ -145,7 +144,7 @@ curl -X POST http://localhost:5000/api/user/contacts \
 }
  
  
-10. Удаление контакта  
+TODO:10. Удаление контакта  
 
 curl -X DELETE http://localhost:5000/api/user/contacts/2 \
 -H "Authorization: Bearer your_jwt_token_here"
@@ -156,7 +155,7 @@ curl -X DELETE http://localhost:5000/api/user/contacts/2 \
 }
  
  
-11. Отправка сообщения  
+TODO:11. Отправка сообщения  
 
 curl -X POST http://localhost:5000/api/messages/send \
 -H "Authorization: Bearer your_jwt_token_here" \
@@ -177,7 +176,7 @@ curl -X POST http://localhost:5000/api/messages/send \
 }
  
  
-12. Получение сообщений из чата  
+TODO:12. Получение сообщений из чата  
 
 curl -X GET http://localhost:5000/api/messages/chat/1 \
 -H "Authorization: Bearer your_jwt_token_here"
@@ -197,7 +196,7 @@ curl -X GET http://localhost:5000/api/messages/chat/1 \
 }
  
  
-13. Редактирование сообщения  
+TODO:13. Редактирование сообщения  
 
 curl -X PUT http://localhost:5000/api/messages/edit/1 \
 -H "Authorization: Bearer your_jwt_token_here" \
@@ -218,7 +217,7 @@ curl -X PUT http://localhost:5000/api/messages/edit/1 \
 }
  
  
-14. Удаление сообщения  
+TODO:14. Удаление сообщения  
 
 curl -X DELETE http://localhost:5000/api/messages/delete/1 \
 -H "Authorization: Bearer your_jwt_token_here"
@@ -229,7 +228,7 @@ curl -X DELETE http://localhost:5000/api/messages/delete/1 \
 }
  
  
-15. Пересылка сообщения  
+TODO:15. Пересылка сообщения  
 
 curl -X POST http://localhost:5000/api/messages/forward \
 -H "Authorization: Bearer your_jwt_token_here" \
@@ -242,7 +241,7 @@ curl -X POST http://localhost:5000/api/messages/forward \
 }
  
  
-16. Настройка уведомлений для чата  
+TODO:16. Настройка уведомлений для чата  
 Включение уведомлений: 
 
 curl -X POST http://localhost:5000/api/chats/notifications/enable/1 \
@@ -265,7 +264,7 @@ curl -X POST http://localhost:5000/api/chats/notifications/disable/1 \
 }
  
  
-17. Получение списка чатов  
+TODO:17. Получение списка чатов  
 
 curl -X GET http://localhost:5000/api/chats/list \
 -H "Authorization: Bearer your_jwt_token_here"
@@ -287,7 +286,7 @@ curl -X GET http://localhost:5000/api/chats/list \
 }
  
  
-18. Выход из системы  
+TODO:18. Выход из системы  
 
 curl -X POST http://localhost:5000/api/auth/logout \
 -H "Authorization: Bearer your_jwt_token_here"

@@ -1,12 +1,15 @@
 const express = require('express');
 const http = require('http');
-const initializeWebSocket = require('./websocket');
-
+const websocket = require('./websocket');
 const app = express();
 const server = http.createServer(app);
 
 // Middleware для парсинга JSON
 app.use(express.json()); // Эта строка должна быть обязательно!
+
+// Подключение маршрутов сообщений
+const messageRoutes = require('./routes/messageRoutes');
+app.use('/api/messages', messageRoutes);
 
 // Подключение маршрутов аутентификации
 const authRoutes = require('./routes/authRoutes');
@@ -23,7 +26,8 @@ sequelize.sync({ alter: true }).then(() => {
 });
 
 // Инициализация WebSocket
-initializeWebSocket(server);
+websocket(server, app);
+app.set('io', websocket); // Сохраняем экземпляр WebSocket
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
