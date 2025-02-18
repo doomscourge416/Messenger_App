@@ -11,13 +11,13 @@ module.exports = (server, app) => {
     const chatId = url.searchParams.get('chatId');
 
     if (!chatId) {
+      console.error('Не указан chatId для WebSocket');
       ws.close();
       return;
     }
 
-    console.log(`Клиент подключился к чату ${chatId}`);
-
     ws.chatId = chatId; // Сохраняем ID чата для клиента
+    console.log(`Клиент подключился к чату ${chatId}`);
 
     ws.on('message', (message) => {
       console.log(`Получено сообщение от клиента: ${message}`);

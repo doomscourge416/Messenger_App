@@ -14,4 +14,7 @@ router.use((req, res, next) => {
 // Создание чата
 router.post('/create', authMiddleware, chatController.createChat);
 
+// Получение списка чатов
+router.get('/list', authMiddleware, chatController.getChats);
+
 module.exports = router;

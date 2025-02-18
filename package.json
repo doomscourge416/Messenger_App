@@ -28,7 +28,8 @@
     "nodemailer": "^6.10.0",
     "pg": "^8.13.1",
     "sequelize": "^6.37.5",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "wscat": "^6.0.1"
   },
   "devDependencies": {
     "@types/sequelize": "^4.28.20",

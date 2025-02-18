@@ -1,15 +1,16 @@
 const express = require('express');
 const http = require('http');
-const websocket = require('./websocket');
+const cors = require('cors');
+const initializeWebSocket = require('./websocket');
+
 const app = express();
 const server = http.createServer(app);
 
-// Middleware для парсинга JSON
-app.use(express.json()); // Эта строка должна быть обязательно!
+// Middleware для CORS
+app.use(cors({ origin: 'http://localhost:3000 '})); // Разрешаю доступ с клиента
 
-// Подключение маршрутов сообщений
-const messageRoutes = require('./routes/messageRoutes');
-app.use('/api/messages', messageRoutes);
+// Middleware для парсинга JSON
+app.use(express.json());
 
 // Подключение маршрутов аутентификации
 const authRoutes = require('./routes/authRoutes');
@@ -19,6 +20,10 @@ app.use('/api/auth', authRoutes);
 const chatRoutes = require('./routes/chatRoutes');
 app.use('/api/chats', chatRoutes);
 
+// Подключение маршрутов сообщений
+const messageRoutes = require('./routes/messageRoutes');
+app.use('/api/messages', messageRoutes);
+
 // Синхронизация моделей с базой данных
 const { sequelize } = require('./db');
 sequelize.sync({ alter: true }).then(() => {
@@ -26,8 +31,7 @@ sequelize.sync({ alter: true }).then(() => {
 });
 
 // Инициализация WebSocket
-websocket(server, app);
-app.set('io', websocket); // Сохраняем экземпляр WebSocket
+initializeWebSocket(server, app); 
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
