@@ -14,7 +14,7 @@ TODO:2. Вход в систему
 
 curl -X POST http://localhost:5000/api/auth/login \
 -H "Content-Type: application/json" \
--d '{"email":"newuser@example.com","password":"password123"}'
+-d '{"email":"user2@example.com","password":"password123"}'
 
 Ответ:  
 {

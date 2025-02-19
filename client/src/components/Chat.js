@@ -138,6 +138,27 @@ const Chat = ({ chatId, token }) => {
     }
   };
 
+  // Пересылка сообщений 
+    const handleForward = async (messageId) => {
+    try {
+      const recipientId = prompt('Введите ID получателя:');
+      if (!recipientId) return;
+
+      await axios.post(
+        '/api/messages/forward',
+        { messageId, recipientId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert('Сообщение успешно переслано!');
+    } catch (error) {
+      console.error('Ошибка при пересылке сообщения:', error.response?.data || error.message);
+      alert('Не удалось переслать сообщение.');
+    }
+  };
+
   return (
     <div>
       <h2>Чат #{chatId}</h2>
@@ -149,12 +170,20 @@ const Chat = ({ chatId, token }) => {
             <strong>{msg.sender?.nickname || 'Unknown'}: </strong> 
             {msg.content} ({msg.createdAt})
 
-            {/* Контекстное меню для редактирования/удаления */}
+            {/* Контекстное меню для пересылки/редактирования/удаления */}
+
             <div style={{ display: 'inline-block', marginLeft: '10px' }}>
+              <button onClick={() => handleForward(msg.id)}>
+                Переслать
+              </button> {/* Строка 25 */}
+
               <button onClick={() => handleEdit(msg.id, prompt('Введите новое сообщение', msg.content))}>
                 Редактировать
               </button>
-              <button onClick={() => handleDelete(msg.id)}>Удалить</button>
+
+              <button onClick={() => handleDelete(msg.id)}>
+                Удалить
+              </button>
             </div>
           </div>
         ))}

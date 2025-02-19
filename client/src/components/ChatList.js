@@ -7,6 +7,7 @@ const ChatList = ({ token }) => {
   const [selectedChatId, setSelectedChatId] = useState(null);
 
   useEffect(() => {
+
     // Получаем список чатов пользователя
     const fetchChats = async () => {
       try {
@@ -20,6 +21,7 @@ const ChatList = ({ token }) => {
     };
 
     fetchChats();
+
   }, [token]);
 
   if (!selectedChatId && chats.length > 0) {
@@ -29,29 +31,22 @@ const ChatList = ({ token }) => {
   return (
     <div>
       <h1>Список чатов</h1>
-
-      {/* Список чатов */}
       <ul>
         {chats.map((chat) => (
-          <li
-            key={chat.id}
-            onClick={() => setSelectedChatId(chat.id)}
-            style={{
-              backgroundColor: selectedChatId === chat.id ? '#ddd' : 'transparent',
-              cursor: 'pointer',
-              padding: '10px',
-              borderBottom: '1px solid #ccc',
-            }}
-          >
-            {chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}
+          <li key={chat.id} style={{ cursor: 'pointer', padding: '10px', borderBottom: '1px solid #ccc' }}>
+            <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
+            <ul>
+              {chat.participants.map((participant) => (
+                <li key={participant.id}>{participant.nickname}</li>
+              ))}
+            </ul>
           </li>
         ))}
       </ul>
-
-      {/* Выбранный чат */}
       {selectedChatId && <Chat chatId={selectedChatId} token={token} />}
     </div>
   );
+
 };
 
 export default ChatList;

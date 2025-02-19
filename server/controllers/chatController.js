@@ -30,6 +30,9 @@ exports.createChat = async (req, res) => {
       await chat.addParticipant(participantId);
     }
 
+    // Автоматически добавляем текущего пользователя TODO: Поменять реализацию на нормальную
+    await chat.addParticipant(userId);
+
     res.json({ message: 'Чат успешно создан', chat });
   } catch (error) {
     console.error('Ошибка при создании чата:', error);

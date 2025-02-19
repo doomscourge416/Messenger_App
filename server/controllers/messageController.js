@@ -202,3 +202,68 @@ exports.deleteMessage = async (req, res) => {
   }
   
 };
+
+exports.forwardMessage = async (req, res) => {
+  try {
+    const { messageId, recipientId } = req.body; // Строка 50: получаем данные из тела запроса
+    const userId = req.userId;
+
+    // Находим исходное сообщение
+    const originalMessage = await Message.findByPk(messageId);
+    if (!originalMessage) {
+      return res.status(404).json({ message: 'Исходное сообщение не найдено' });
+    }
+
+    // Проверяем, является ли пользователь автором сообщения
+    if (originalMessage.senderId !== userId) {
+      return res.status(403).json({ message: 'Вы не являетесь автором этого сообщения' });
+    }
+
+    // Находим чат получателя
+    const recipientChat = await Chat.findOne({
+      where: { type: 'private' },
+      include: [
+        {
+          model: User,
+          as: 'participants',
+          where: { id: recipientId },
+        },
+      ],
+    });
+
+    if (!recipientChat) {
+      return res.status(404).json({ message: 'Чат с получателем не найден' });
+    }
+
+    // Создаем новое сообщение в чате получателя
+    const newMessage = await Message.create({
+      content: originalMessage.content,
+      senderId: userId,
+      chatId: recipientChat.id,
+    });
+
+    // Отправляем событие через WebSocket
+    const io = req.app.get('io');
+    if (io) {
+      io.clients.forEach((client) => {
+        if (client.chatId === recipientChat.id.toString()) {
+          client.send(
+            JSON.stringify({
+              type: 'newMessage',
+              id: newMessage.id,
+              content: newMessage.content,
+              senderId: userId,
+              chatId: recipientChat.id,
+              createdAt: newMessage.createdAt.toLocaleString(),
+            })
+          );
+        }
+      });
+    }
+
+    res.json({ message: 'Сообщение успешно переслано', newMessage });
+  } catch (error) {
+    console.error('Ошибка при пересылке сообщения:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
