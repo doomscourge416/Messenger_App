@@ -14,6 +14,14 @@ class WebSocketService {
     };
 
     this.socket.onmessage = (event) => {
+  
+      if (typeof event.data !== 'string') {
+        console.warn('Получены некорректные данные:', event.data);
+        return;
+      }
+      
+      console.log('Получены данные через WebSocket:', event.data);
+      
       const message = JSON.parse(event.data);
       console.log('Новое сообщение:', message);
 

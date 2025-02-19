@@ -5,36 +5,64 @@ import WebSocketService from '../services/websocket';
 const Chat = ({ chatId, token }) => {
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
-  const [, setWs] = useState(null);
-//   const [ws, setWs] = useState(null);
+  const [ws, setWs] = useState(null);
 
   useEffect(() => {
-
     // Создаем экземпляр WebSocket
-
     const websocket = new WebSocketService(chatId, token);
     websocket.connect();
-
+    
 
     // Обработка новых сообщений
-    
-    websocket.setOnMessageCallback((newMessage) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    websocket.setOnMessageCallback((event) => {
+      console.log('Получены данные через WebSocket:', event.data);
+      if (typeof event.data !== 'string') {
+        console.warn('Получены некорректные данные:', event.data);
+        return;
+      }
+      
+      try {
+        const data = JSON.parse(event.data); // Строка 14
+        console.log('Новое сообщение:', data);
+      
+        if (data.type === 'newMessage') {
+          setMessages((prevMessages) => [...prevMessages, data]);
+        } else if (data.type === 'editMessage') {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) => (msg.id === data.id ? { ...msg, content: data.content } : msg))
+          );
+        } else if (data.type === 'deleteMessage') {
+          setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== data.id));
+        }
+      } catch (error) {
+        console.error('Ошибка при парсинге данных WebSocket:', error.message);
+      }
+
+
+      const data = JSON.parse(event);
+
+      if (data.type === 'newMessage') {
+        setMessages((prevMessages) => [...prevMessages, data]);
+      } else if (data.type === 'editMessage') {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === data.id ? { ...msg, content: data.content } : msg
+          )
+        );
+      } else if (data.type === 'deleteMessage') {
+        setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== data.id));
+      }
     });
 
     setWs(websocket);
 
-
     // Очистка WebSocket при размонтировании компонента
-
     return () => {
       websocket.disconnect();
     };
   }, [chatId, token]);
 
-
   // Получение истории сообщений
-
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -48,19 +76,16 @@ const Chat = ({ chatId, token }) => {
           createdAt: new Date(msg.createdAt).toLocaleString(),
         }));
 
-        setMessages(formattedMessages);
+        setMessages(response.data.messages);
       } catch (error) {
         console.error('Ошибка при получении сообщений:', error.response?.data || error.message);
       }
     };
 
     fetchMessages();
-
   }, [chatId, token]);
 
-
   // Отправка сообщения через API
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -79,8 +104,7 @@ const Chat = ({ chatId, token }) => {
     }
   };
 
-  // Редактирование сообщения 
-
+  // Редактирование сообщения
   const handleEdit = async (messageId, newContent) => {
     try {
       await axios.put(
@@ -102,7 +126,6 @@ const Chat = ({ chatId, token }) => {
   };
 
   // Удаление сообщения
-
   const handleDelete = async (messageId) => {
     try {
       await axios.delete(`/api/messages/delete/${messageId}`, {
@@ -113,9 +136,9 @@ const Chat = ({ chatId, token }) => {
     } catch (error) {
       console.error('Ошибка при удалении сообщения:', error.response?.data || error.message);
     }
-   };
+  };
 
-   return (
+  return (
     <div>
       <h2>Чат #{chatId}</h2>
 
@@ -123,7 +146,7 @@ const Chat = ({ chatId, token }) => {
       <div>
         {messages.map((msg) => (
           <div key={msg.id} style={{ marginBottom: '10px' }}>
-            <strong>{msg.sender.nickname}: </strong>
+            <strong>{msg.sender?.nickname || 'Unknown'}: </strong> 
             {msg.content} ({msg.createdAt})
 
             {/* Контекстное меню для редактирования/удаления */}
