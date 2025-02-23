@@ -30,6 +30,10 @@ sequelize.sync({ alter: true }).then(() => {
   console.log('База данных синхронизирована');
 });
 
+// Подключение маршрутов нотификаций
+const notificationRoutes = require('./routes/notificationRoutes');
+app.use('/api/notifications', notificationRoutes); // Строка 30
+
 // Инициализация WebSocket
 initializeWebSocket(server, app); 
 

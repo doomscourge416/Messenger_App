@@ -5,62 +5,49 @@ import WebSocketService from '../services/websocket';
 const Chat = ({ chatId, token }) => {
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
-  const [ws, setWs] = useState(null);
+  // const [ws, setWs] = useState(null); TODO: нужна ли эта строка???
 
   useEffect(() => {
     // Создаем экземпляр WebSocket
-    const websocket = new WebSocketService(chatId, token);
-    websocket.connect();
-    
-
-    // Обработка новых сообщений
-    websocket.setOnMessageCallback((event) => {
-      console.log('Получены данные через WebSocket:', event.data);
-      if (typeof event.data !== 'string') {
-        console.warn('Получены некорректные данные:', event.data);
-        return;
-      }
-      
-      try {
-        const data = JSON.parse(event.data); // Строка 14
-        console.log('Новое сообщение:', data);
-      
-        if (data.type === 'newMessage') {
-          setMessages((prevMessages) => [...prevMessages, data]);
-        } else if (data.type === 'editMessage') {
-          setMessages((prevMessages) =>
-            prevMessages.map((msg) => (msg.id === data.id ? { ...msg, content: data.content } : msg))
-          );
-        } else if (data.type === 'deleteMessage') {
-          setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== data.id));
-        }
-      } catch (error) {
-        console.error('Ошибка при парсинге данных WebSocket:', error.message);
-      }
-
-
-      const data = JSON.parse(event);
-
+    const websocket = new WebSocketService(chatId);
+  
+    // Подключаемся и передаем коллбэк для обработки сообщений
+    websocket.connect((data) => { // Строка 30: передаем коллбэк
       if (data.type === 'newMessage') {
         setMessages((prevMessages) => [...prevMessages, data]);
       } else if (data.type === 'editMessage') {
         setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.id === data.id ? { ...msg, content: data.content } : msg
-          )
+          prevMessages.map((msg) => (msg.id === data.id ? { ...msg, content: data.content } : msg))
         );
       } else if (data.type === 'deleteMessage') {
         setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== data.id));
       }
     });
-
-    setWs(websocket);
-
+  
     // Очистка WebSocket при размонтировании компонента
     return () => {
       websocket.disconnect();
     };
+  }, [chatId]);
+
+  const [isMuted, setIsMuted] = useState(false); // Строка 40
+
+  useEffect(() => {
+    const fetchNotificationSettings = async () => {
+      try {
+        const response = await axios.get(`/api/notifications/${chatId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setIsMuted(response.data.isMuted); // Строка 45
+      } catch (error) {
+        console.error('Ошибка при получении настроек уведомлений:', error.response?.data || error.message);
+      }
+    };
+
+    fetchNotificationSettings();
   }, [chatId, token]);
+
 
   // Получение истории сообщений
   useEffect(() => {
@@ -69,12 +56,6 @@ const Chat = ({ chatId, token }) => {
         const response = await axios.get(`/api/messages/chat/${chatId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        // Преобразуем даты при получении сообщений
-        const formattedMessages = response.data.messages.map((msg) => ({
-          ...msg,
-          createdAt: new Date(msg.createdAt).toLocaleString(),
-        }));
 
         setMessages(response.data.messages);
       } catch (error) {
@@ -139,19 +120,19 @@ const Chat = ({ chatId, token }) => {
   };
 
   // Пересылка сообщений 
-    const handleForward = async (messageId) => {
+  const handleForward = async (messageId) => {
     try {
-      const recipientId = prompt('Введите ID получателя:');
-      if (!recipientId) return;
-
+      const chatId = prompt('Введите ID чата получателя:'); // Строка 25: просим ID чата
+      if (!chatId) return;
+  
       await axios.post(
         '/api/messages/forward',
-        { messageId, recipientId },
+        { messageId, recipientId: chatId }, // Строка 27: передаем ID чата
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+  
       alert('Сообщение успешно переслано!');
     } catch (error) {
       console.error('Ошибка при пересылке сообщения:', error.response?.data || error.message);
@@ -159,9 +140,30 @@ const Chat = ({ chatId, token }) => {
     }
   };
 
+  const handleMute = async (chatId) => {
+    try {
+      await axios.post(
+        '/api/notifications/mute',
+        { chatId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      setIsMuted((prev) => !prev); // Строка 50: переключаем статус mute
+      alert('Настройки уведомлений обновлены!');
+    } catch (error) {
+      console.error('Ошибка при управлении уведомлениями:', error.response?.data || error.message);
+      alert('Не удалось обновить настройки уведомлений.');
+    }
+  };
+
   return (
     <div>
       <h2>Чат #{chatId}</h2>
+      <div style={{ display: 'inline-block', marginLeft: '10px' }}>
+        <button onClick={() => handleMute(chatId)}>Отключить уведомления</button> {/* Строка 40 */}
+      </div>
 
       {/* История сообщений */}
       <div>

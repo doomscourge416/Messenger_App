@@ -25,6 +25,7 @@ exports.createChat = async (req, res) => {
 
     // Создание чата
     const chat = await Chat.create({ type });
+    
     // Добавление участников
     for (const participantId of participants) {
       await chat.addParticipant(participantId);

@@ -16,6 +16,6 @@ router.put('/edit/:messageId', authMiddleware, messageController.editMessage);
 router.delete('/delete/:messageId', authMiddleware, messageController.deleteMessage);
 
 // Пересылка сообщения
-router.post('/forward', authMiddleware, messageController.forwardMessage); // Строка 16
+router.post('/forward', authMiddleware, messageController.forwardMessage);
 
 module.exports = router;

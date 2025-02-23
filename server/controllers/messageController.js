@@ -205,7 +205,7 @@ exports.deleteMessage = async (req, res) => {
 
 exports.forwardMessage = async (req, res) => {
   try {
-    const { messageId, recipientId } = req.body; // Строка 50: получаем данные из тела запроса
+    const { messageId, recipientId } = req.body; // Строка 50: получаем ID сообщения и ID чата
     const userId = req.userId;
 
     // Находим исходное сообщение
@@ -220,19 +220,15 @@ exports.forwardMessage = async (req, res) => {
     }
 
     // Находим чат получателя
-    const recipientChat = await Chat.findOne({
-      where: { type: 'private' },
-      include: [
-        {
-          model: User,
-          as: 'participants',
-          where: { id: recipientId },
-        },
-      ],
-    });
-
+    const recipientChat = await Chat.findByPk(recipientId); // Строка 60: ищем чат по ID
     if (!recipientChat) {
-      return res.status(404).json({ message: 'Чат с получателем не найден' });
+      return res.status(404).json({ message: 'Чат получателя не найден' });
+    }
+
+    // Проверяем, является ли пользователь участником чата получателя
+    const isParticipant = await recipientChat.hasParticipant(userId); // Строка 65
+    if (!isParticipant) {
+      return res.status(403).json({ message: 'Вы не являетесь участником этого чата' });
     }
 
     // Создаем новое сообщение в чате получателя
