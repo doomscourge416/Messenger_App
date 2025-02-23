@@ -20,21 +20,30 @@ module.exports = (sequelize, DataTypes) => {
           isEmail: true,
         },
       },
+
       nickname: {
         type: DataTypes.STRING,
         unique: true,
       },
+
       password: {
         type: DataTypes.STRING,
         allowNull: false,
       },
+
+      avatarUrl: {
+        type: DataTypes.STRING,
+      },
+
       isEmailVisible: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
+
       verificationToken: {
         type: DataTypes.STRING,
       },
+      
     },
     {
       sequelize,

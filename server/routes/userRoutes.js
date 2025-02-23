@@ -12,4 +12,7 @@ router.put('/avatar', authMiddleware, userController.updateAvatar);
 // Переключение видимости email
 router.put('/email-visibility', authMiddleware, userController.toggleEmailVisibility);
 
+// Поиск пользователей
+router.get('/search', authMiddleware, userController.searchUsers);
+
 module.exports = router;

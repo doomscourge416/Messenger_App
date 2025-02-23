@@ -1,5 +1,3 @@
-'use strict';
-
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
@@ -10,6 +8,14 @@ module.exports = (sequelize, DataTypes) => {
       type: {
         type: DataTypes.ENUM('private', 'group'),
         defaultValue: 'private',
+      },
+      adminId: { // Строка 10: добавляем adminId
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
+        onDelete: 'SET NULL',
       },
     },
     {
@@ -30,6 +36,8 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'chatId',
         otherKey: 'userId',
       });
+
+      Chat.belongsTo(models.User, { foreignKey: 'adminId', as: 'admin' }); // Строка 25: добавляем ассоциацию
     }
   };
 

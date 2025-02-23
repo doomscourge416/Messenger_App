@@ -18,7 +18,7 @@ curl -X POST http://localhost:5000/api/auth/login \
 
 Ответ:  
 {
-  "token": "your_jwt_token_here"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0MDMwODU2MywiZXhwIjoxNzQwMzEyMTYzfQ.ChbTHM52MuYcGquwR-bXE_r_wVN0UA7ePwyh93pa6j0"
 }
  
 Сохраните токен (token), так как он понадобится для защищенных маршрутов. 
@@ -39,7 +39,7 @@ TODO:4. Создание чата
 Создание группового чата: 
 
 curl -X POST http://localhost:5000/api/chats/create \
--H "Authorization: Bearer your_jwt_token_here" \
+-H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0MDMwODU2MywiZXhwIjoxNzQwMzEyMTYzfQ.ChbTHM52MuYcGquwR-bXE_r_wVN0UA7ePwyh93pa6j0" \
 -H "Content-Type: application/json" \
 -d '{"participants":[2,3],"type":"group"}'
  

@@ -17,4 +17,7 @@ router.post('/create', authMiddleware, chatController.createChat);
 // Получение списка чатов
 router.get('/list', authMiddleware, chatController.getChats);
 
+// Назначение нового администратора
+router.post('/transfer-admin', authMiddleware, chatController.transferAdmin);
+
 module.exports = router;

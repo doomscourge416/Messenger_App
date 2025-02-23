@@ -24,6 +24,31 @@ const ChatList = ({ token }) => {
 
   }, [token]);
 
+
+  // Поиск пользователей
+  useEffect(() => {
+    const searchUsers = async () => { // Строка 20
+      if (!searchQuery) {
+        setFoundUsers([]);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`/api/user/search?query=${searchQuery}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setFoundUsers(response.data.users);
+      } catch (error) {
+        console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
+      }
+    };
+
+    searchUsers();
+  }, [searchQuery, token]);
+
+
+
   if (!selectedChatId && chats.length > 0) {
     setSelectedChatId(chats[0].id); // Автоматически выбираем первый чат
   }
@@ -31,6 +56,27 @@ const ChatList = ({ token }) => {
   return (
     <div>
       <h1>Список чатов</h1>
+
+
+        {/* Форма для поиска пользователей */}
+        <div>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} // Строка 45
+          placeholder="Поиск пользователей..."
+        />
+        <ul>
+          {foundUsers.map((user) => (
+            <li key={user.id}>
+              {user.nickname} ({user.email})
+            </li>
+          ))}
+        </ul>
+      </div>
+
+
+      {/* Список чатов */}
       <ul>
         {chats.map((chat) => (
           <li key={chat.id} style={{ cursor: 'pointer', padding: '10px', borderBottom: '1px solid #ccc' }}>

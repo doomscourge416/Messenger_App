@@ -23,8 +23,13 @@ exports.createChat = async (req, res) => {
       return res.status(400).json({ message: 'Один или несколько пользователей не найдены' });
     }
 
+
+    const userId = req.userId;
     // Создание чата
-    const chat = await Chat.create({ type });
+    const chat = await Chat.create({ 
+      type,
+      adminId: userId,  // Назначение создавшего чат пользователя администратором
+    });
     
     // Добавление участников
     for (const participantId of participants) {
@@ -69,6 +74,30 @@ exports.getChats = async (req, res) => {
     res.json({ chats: user.chats });
   } catch (error) {
     console.error('Ошибка при получении списка чатов:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
+exports.transferAdmin = async (req, res) => {
+  try {
+    const { chatId, newAdminId } = req.body;
+    const currentUserId = req.userId;
+
+    const chat = await Chat.findByPk(chatId);
+    if (!chat) {
+      return res.status(404).json({ message: 'Чат не найден' });
+    }
+
+    if (chat.adminId !== currentUserId) {
+      return res.status(403).json({ message: 'Вы не являетесь администратором этого чата' });
+    }
+
+    chat.adminId = newAdminId;
+    await chat.save();
+
+    res.json({ message: 'Администратор успешно назначен', chat });
+  } catch (error) {
+    console.error('Ошибка при назначении администратора:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };

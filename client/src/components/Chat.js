@@ -158,11 +158,60 @@ const Chat = ({ chatId, token }) => {
     }
   };
 
+
+  const handleTransferAdmin = async () => {
+    try {
+      const newAdminId = prompt('Введите ID нового администратора:');
+      if (!newAdminId) return;
+  
+      await axios.post(
+        '/api/chats/transfer-admin',
+        { chatId, newAdminId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      alert('Администратор успешно назначен!');
+    } catch (error) {
+      console.error('Ошибка при назначении администратора:', error.response?.data || error.message);
+      alert('Не удалось назначить нового администратора.');
+    }
+  };
+
+
+
+  exports.toggleEmailVisibility = async (req, res) => {
+    try {
+      const userId = req.userId;
+  
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'Пользователь не найден' });
+      }
+  
+      user.isEmailVisible = !user.isEmailVisible;
+      await user.save();
+  
+      res.json({ message: 'Настройки email успешно обновлены', user });
+    } catch (error) {
+      console.error('Ошибка при обновлении настроек email:', error);
+      res.status(500).json({ message: 'Ошибка сервера' });
+    }
+  };
+
+
+
   return (
     <div>
       <h2>Чат #{chatId}</h2>
+
       <div style={{ display: 'inline-block', marginLeft: '10px' }}>
         <button onClick={() => handleMute(chatId)}>Отключить уведомления</button> {/* Строка 40 */}
+      </div>
+
+      <div style={{ display: 'inline-block', marginLeft: '10px' }}>
+        <button onClick={() => handleTransferAdmin()}>Назначить администратора</button>
       </div>
 
       {/* История сообщений */}
