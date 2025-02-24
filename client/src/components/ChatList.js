@@ -5,29 +5,33 @@ import Chat from './Chat';
 const ChatList = ({ token }) => {
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [foundUsers, setFoundUsers] = useState([]);
 
   useEffect(() => {
-
-    // Получаем список чатов пользователя
     const fetchChats = async () => {
       try {
         const response = await axios.get('/api/chats/list', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setChats(response.data.chats);
+
+        const chatsWithUnread = response.data.chats.map((chat) => ({
+          ...chat,
+          unreadCount: chat.messages?.filter((msg) => !msg.isRead)?.length || 0, // Строка 45
+        }));
+
+        setChats(chatsWithUnread);
       } catch (error) {
-        console.error('Ошибка при получении списка чатов:', error);
+        console.error('Ошибка при получении чатов:', error.response?.data || error.message);
       }
     };
 
     fetchChats();
-
   }, [token]);
-
 
   // Поиск пользователей
   useEffect(() => {
-    const searchUsers = async () => { // Строка 20
+    const searchUsers = async () => {
       if (!searchQuery) {
         setFoundUsers([]);
         return;
@@ -47,23 +51,44 @@ const ChatList = ({ token }) => {
     searchUsers();
   }, [searchQuery, token]);
 
+  // Помечаем сообщения как прочитанные
+  useEffect(() => {
+    const markMessagesAsRead = async () => {
+      if (!selectedChatId) return; // Строка 80
 
+      try {
+        await axios.post(
+          '/api/messages/mark-as-read',
+          { chatId: selectedChatId }, // Используем selectedChatId
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      } catch (error) {
+        console.error('Ошибка при пометке сообщений:', error.response?.data || error.message);
+      }
+    };
 
-  if (!selectedChatId && chats.length > 0) {
-    setSelectedChatId(chats[0].id); // Автоматически выбираем первый чат
-  }
+    markMessagesAsRead();
+  }, [selectedChatId, token]); // Строка 95
+
+  // Автоматический выбор первого чата
+  useEffect(() => {
+    if (!selectedChatId && chats.length > 0) {
+      setSelectedChatId(chats[0].id); // Строка 76
+    }
+  }, [chats, selectedChatId]);
 
   return (
     <div>
       <h1>Список чатов</h1>
 
-
-        {/* Форма для поиска пользователей */}
-        <div>
+      {/* Форма для поиска пользователей */}
+      <div>
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)} // Строка 45
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Поиск пользователей..."
         />
         <ul>
@@ -75,12 +100,24 @@ const ChatList = ({ token }) => {
         </ul>
       </div>
 
-
       {/* Список чатов */}
       <ul>
         {chats.map((chat) => (
-          <li key={chat.id} style={{ cursor: 'pointer', padding: '10px', borderBottom: '1px solid #ccc' }}>
+          <li
+            key={chat.id}
+            onClick={() => setSelectedChatId(chat.id)} // Выбор чата
+            style={{
+              cursor: 'pointer',
+              padding: '10px',
+              borderBottom: '1px solid #ccc',
+              backgroundColor: selectedChatId === chat.id ? '#ddd' : 'transparent',
+            }}
+          >
             <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
+            {/* Счетчик непрочитанных сообщений */}
+            {chat.unreadCount > 0 && (
+              <span style={{ color: 'red', marginLeft: '5px' }}>[{chat.unreadCount}]</span>
+            )}
             <ul>
               {chat.participants.map((participant) => (
                 <li key={participant.id}>{participant.nickname}</li>
@@ -89,10 +126,11 @@ const ChatList = ({ token }) => {
           </li>
         ))}
       </ul>
-      {selectedChatId && <Chat chatId={selectedChatId} token={token} />}
+
+      {/* Отображение выбранного чата */}
+      {selectedChatId && <Chat chatId={selectedChatId} token={token} />} {/* Строка 90 */}
     </div>
   );
-
 };
 
 export default ChatList;

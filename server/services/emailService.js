@@ -1,20 +1,33 @@
 const nodemailer = require('nodemailer');
 
-let transporter = nodemailer.createTransport({
-    service: 'gmail', 
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-
+// Создаем транспорт для отправки email
+const transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
 });
 
-module.exports = async (to, subject, html) => {
-    from: `"Мессенджер" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html
-};
+// Метод для отправки email
+exports.sendEmail = async (to, subject, text) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to,
+      subject,
+      text,
+    };
 
-console.log('Письмо отправлено:', info.messageId);
-// };
+    // Отправляем email
+    const info = await transporter.sendMail(mailOptions); // Строка 19
+
+    if (info && info.messageId) {
+      console.log('Письмо отправлено:', info.messageId); // Строка 35
+    } else {
+      console.warn('Письмо не было отправлено или отсутствует messageId');
+    }
+  } catch (error) {
+    console.error('Ошибка при отправке email:', error.message);
+  }
+};

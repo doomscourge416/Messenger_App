@@ -103,6 +103,33 @@ exports.getMessagesByChat = async (req, res) => {
 
 };
 
+exports.markAsRead = async (req, res) => {
+  try {
+    const { chatId } = req.body;
+    const userId = req.userId;
+
+    if (!chatId) {
+      return res.status(400).json({ message: 'Необходимо указать chatId' });
+    }
+
+    // Помечаем все сообщения чата как прочитанные для текущего пользователя
+    await Message.update(
+      { isRead: true }, // Обновляем поле isRead
+      {
+        where: {
+          chatId,
+          senderId: { [Op.ne]: userId }, // Исключаем сообщения, отправленные самим пользователем
+        },
+      }
+    );
+
+    res.json({ message: 'Сообщения успешно помечены как прочитанные' });
+  } catch (error) {
+    console.error('Ошибка при пометке сообщений:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
 exports.editMessage = async (req, res) => {
 
   try {
@@ -260,6 +287,33 @@ exports.forwardMessage = async (req, res) => {
     res.json({ message: 'Сообщение успешно переслано', newMessage });
   } catch (error) {
     console.error('Ошибка при пересылке сообщения:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
+exports.getForwardedMessages = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const messages = await Message.findAll({
+      where: { chatId },
+      include: [
+        {
+          model: User,
+          as: 'sender',
+          attributes: ['id', 'nickname'],
+        },
+        {
+          model: Chat,
+          as: 'originalChat', // Таблица для хранения оригинального чата
+          attributes: ['id'],
+        },
+      ],
+    });
+
+    res.json({ messages });
+  } catch (error) {
+    console.error('Ошибка при получении пересланных сообщений:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };

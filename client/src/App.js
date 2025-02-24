@@ -2,44 +2,64 @@ import React, { useState } from 'react';
 // import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ChatList from './components/ChatList';
+import Login from './components/Login';
+import Register from './components/Register'; 
 
 function App() {
   const [token, setToken] = useState(null);
-  const setUserId = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [isRegistering, setIsRegistering] = useState(false);
   // const [userId, setUserId] = useState(null); // Неиспользуется userId
 
-  // Аутентификация
-  const handleLogin = async () => {
-    try {
+  // Обработка входа
+  const handleLogin = (newToken, newUserId) => {
 
-      console.log('Попытка входа...');
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email: 'user2@example.com',
-        password: 'password123',
-      });
+    setToken(newToken);
+    setUserId(newUserId);
+    localStorage.setItem('messengerToken', newToken);
 
-      if (response.data.token) {
-        console.log('Получен токен:', response.data.token);
-        setToken(response.data.token);  // Сохраняем токен
-        setUserId(response.data.user.id);  // и Юзер Айди 
-        
-      } else {
-        console.error('Токен не получен');
-      }
-      
-    } catch (error) {
-      console.error('Ошибка при входе:', error.response?.data || error.message);
-    }
   };
 
+  // Обработка выхода
+  const handleLogout = () => {
+    
+    setToken(null);
+    setUserId(null);
+
+    localStorage.removeItem('messengerToken');
+    alert('Вы вышли из системы.');
+
+  };
+
+  // Преключение на форму регистрации
+  const handleRegisterClick = () => {
+    setIsRegistering(true);
+  };
+
+  // Возврат к форме входа
+  const handleLoginClick = () => {
+    setIsRegistering(false);
+  };
+
+  
   return (
     <div className="App">
       <h1>Мессенджер</h1>
 
       {!token ? (
-        <button onClick={handleLogin}>Войти</button>
+        isRegistering ? (
+          <Register onRegister={handleLoginClick} />
+        ) : (
+          <Login 
+            onLogin={handleLogin} 
+            onRegister={handleRegisterClick} // Передаем handleRegisterClick как onRegister
+          />
+        )
       ) : (
-        <ChatList token={token} />
+        <div>
+          <button onClick={handleLogout}>Выйти</button>
+          <ChatList token={token} />
+        </div>
       )}
     </div>
   );

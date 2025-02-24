@@ -9,6 +9,9 @@ router.post('/send', authMiddleware, messageController.sendMessage);
 // Получение сообщений по ID чата
 router.get('/chat/:chatId', authMiddleware, messageController.getMessagesByChat);
 
+// Пометка сообщений как прочитанных
+router.post('/mark-as-read', authMiddleware, messageController.markAsRead); // Строка 20
+
 // Редактирование сообщения
 router.put('/edit/:messageId', authMiddleware, messageController.editMessage);
 
@@ -17,5 +20,8 @@ router.delete('/delete/:messageId', authMiddleware, messageController.deleteMess
 
 // Пересылка сообщения
 router.post('/forward', authMiddleware, messageController.forwardMessage);
+
+// Получение пересланных сообщений
+router.get('/forwarded/:chatId', authMiddleware, messageController.getForwardedMessages); // Строка 20
 
 module.exports = router;

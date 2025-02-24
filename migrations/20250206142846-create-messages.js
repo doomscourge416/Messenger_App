@@ -38,6 +38,10 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+    await queryInterface.addColumn('Messages', 'isRead', {
+      type: Sequelize.BOOLEAN,
+      defaultValue: false,
+    });
   },
 
   async down(queryInterface, Sequelize) {

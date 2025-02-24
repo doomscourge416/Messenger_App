@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import WebSocketService from '../services/websocket';
 
+
 const Chat = ({ chatId, token }) => {
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
@@ -178,28 +179,6 @@ const Chat = ({ chatId, token }) => {
       alert('Не удалось назначить нового администратора.');
     }
   };
-
-
-
-  exports.toggleEmailVisibility = async (req, res) => {
-    try {
-      const userId = req.userId;
-  
-      const user = await User.findByPk(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'Пользователь не найден' });
-      }
-  
-      user.isEmailVisible = !user.isEmailVisible;
-      await user.save();
-  
-      res.json({ message: 'Настройки email успешно обновлены', user });
-    } catch (error) {
-      console.error('Ошибка при обновлении настроек email:', error);
-      res.status(500).json({ message: 'Ошибка сервера' });
-    }
-  };
-
 
 
   return (

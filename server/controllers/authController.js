@@ -1,28 +1,33 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 const { User } = require('../db');
+const jwt = require('jsonwebtoken');
+const emailService = require('../services/emailService');
 
 exports.register = async (req, res) => {
   try {
     const { email, nickname, password } = req.body;
+
+    if (!email || !password || !nickname) {
+      return res.status(400).json({ message: 'Необходимо указать email, nickname и password' });
+    }
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
     }
 
-    const user = User.build({ email, nickname, isEmailVerified: false });
+    const user = User.build({ email, nickname });
     await user.setPassword(password);
-    user.verificationToken = user.generateVerificationToken();
     await user.save();
 
-    const verificationLink = `${process.env.CLIENT_URL}/verify?token=${user.verificationToken}`;
-    const html = `<p>Подтвердите ваш email, перейдя по ссылке:</p><a href="${verificationLink}">${verificationLink}</a>`
-    require('../services/emailService')(email, 'Подтверждение регистрации', html);
+    try {
+      await emailService.sendEmail(user.email, 'Регистрация в мессенджере', 'Вы успешно зарегистровались!');
+    } catch (error) {
+      console.warn('Email не отправлен:', error.message);
+    }
 
-    res.status(201).json({ message: 'Пользователь успешно зарегистрирован. Проверьте почту для подтверждения.' });
+    res.json({ message: 'Пользователь успешно зарегистрирован' });
   } catch (error) {
-    console.error(error);
+    console.error('Ошибка при регистрации:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
@@ -37,9 +42,10 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
     res.json({ token, user: { id: user.id } });
   } catch (error) {
-    console.error(error);
+    console.error('Ошибка при входе:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
