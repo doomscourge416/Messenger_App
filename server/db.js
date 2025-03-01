@@ -15,4 +15,10 @@ const models = require('./models');
 models.sequelize = sequelize;
 models.Sequelize = Sequelize;
 
-module.exports = models;
+module.exports = {
+  sequelize,
+  User: require('./models/User')(sequelize, DataTypes),
+  Chat: require('./models/Chat')(sequelize, DataTypes),
+  Message: require('./models/Message')(sequelize, DataTypes),
+  ForwardedMessages: require('./models/ForwardedMessages')(sequelize, DataTypes), // Строка 10
+};

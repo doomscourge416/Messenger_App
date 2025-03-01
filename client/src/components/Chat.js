@@ -181,6 +181,25 @@ const Chat = ({ chatId, token }) => {
   };
 
 
+  const [ forwardedHistory, setForwardedHistory ] = useState([]);
+
+  const handleShowForwardedHistory = async (messageId) => {
+
+    try {
+      const response = await axios.get(`/api/messages/forwarded/${messageId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      setForwardedHistory(response.data.forwardedHistory); // Строка 70
+    } catch (error) {
+      console.error('Ошибка при получении истории пересылок:', error.response?.data || error.message);
+      alert('Не удалось получить историю пересылок.');
+    }
+
+  };
+
+
+
   return (
     <div>
       <h2>Чат #{chatId}</h2>
@@ -205,7 +224,7 @@ const Chat = ({ chatId, token }) => {
             <div style={{ display: 'inline-block', marginLeft: '10px' }}>
               <button onClick={() => handleForward(msg.id)}>
                 Переслать
-              </button> {/* Строка 25 */}
+              </button>
 
               <button onClick={() => handleEdit(msg.id, prompt('Введите новое сообщение', msg.content))}>
                 Редактировать
@@ -214,6 +233,12 @@ const Chat = ({ chatId, token }) => {
               <button onClick={() => handleDelete(msg.id)}>
                 Удалить
               </button>
+
+              <button onClick={() => handleShowForwardedHistory(msg.id)}>
+                Показать историю
+              </button>
+              
+
             </div>
           </div>
         ))}

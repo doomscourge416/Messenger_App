@@ -6,15 +6,22 @@ exports.register = async (req, res) => {
   try {
     const { email, nickname, password } = req.body;
 
+    // Валидация данных
     if (!email || !password || !nickname) {
       return res.status(400).json({ message: 'Необходимо указать email, nickname и password' });
     }
 
-    const existingUser = await User.findOne({ where: { email } });
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Пароль должен быть минимум 6 символов.' });
+    }
+
+    // Проверяем наличие такого email или nickname у существующих пользователей
+    const existingUser = await User.findOne({ where: { [Op.or]: [{ email }, { nickname }] } });
     if (existingUser) {
       return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
     }
 
+    // Создание нового пользователя
     const user = User.build({ email, nickname });
     await user.setPassword(password);
     await user.save();

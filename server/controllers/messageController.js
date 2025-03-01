@@ -1,9 +1,8 @@
-const { Chat, Message, User } = require('../db');
+const { Chat, Message, User, ForwardedMessages, Op } = require('../db');
 
+// Отправка сообщения
 exports.sendMessage = async (req, res) => {
-
   try {
-
     console.log('Тело запроса:', req.body);
     const { chatId, content } = req.body;
     const userId = req.userId;
@@ -37,6 +36,7 @@ exports.sendMessage = async (req, res) => {
 
     // Получаем данные отправителя
     const sender = await User.findByPk(userId, { attributes: ['id', 'nickname'] }) || {};
+
     // Отправляем сообщение через WebSocket
     const io = req.app.get('io');
     if (io) {
@@ -50,7 +50,7 @@ exports.sendMessage = async (req, res) => {
               senderId: message.senderId,
               chatId: message.chatId,
               createdAt: message.createdAt.toLocaleString(),
-              sender: sender, // Добавляем данные отправителя
+              sender: sender,
             })
           );
         }
@@ -58,28 +58,24 @@ exports.sendMessage = async (req, res) => {
     }
 
     res.json({ message: 'Сообщение успешно отправлено', message });
-
   } catch (error) {
-
     console.error('Ошибка при отправке сообщения:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
-
   }
 };
 
+// Получение сообщений по ID чата
 exports.getMessagesByChat = async (req, res) => {
-  
   try {
+    const { chatId } = req.params;
 
-    const{ chatId } = req.params;
-
-    // Проверяем существует-ли чат
+    // Проверяем, существует ли чат
     const chat = await Chat.findByPk(chatId);
-    if(!chat) {
+    if (!chat) {
       return res.status(404).json({ message: 'Чат не найден' });
     }
 
-    // Получаем все сообщения из чата c данными отправитeля
+    // Получаем все сообщения из чата с данными отправителя
     const messages = await Message.findAll({
       where: { chatId },
       include: [
@@ -89,20 +85,17 @@ exports.getMessagesByChat = async (req, res) => {
           attributes: ['id', 'nickname'],
         },
       ],
-      order: [['createdAt', 'ASC']], // Sort messages by time
+      order: [['createdAt', 'ASC']], // Сортируем сообщения по времени
     });
 
     res.json({ messages });
-
   } catch (error) {
-
-    console.error('Ошибка при получении сообщений', error);
-    res.status(500).json({ message: 'Ошибка сервера'});
-
+    console.error('Ошибка при получении сообщений:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
   }
-
 };
 
+// Пометка сообщений как прочитанных
 exports.markAsRead = async (req, res) => {
   try {
     const { chatId } = req.body;
@@ -130,26 +123,25 @@ exports.markAsRead = async (req, res) => {
   }
 };
 
+// Редактирование сообщения
 exports.editMessage = async (req, res) => {
-
   try {
-
     const { messageId } = req.params;
     const { newContent } = req.body;
     const userId = req.userId;
 
     // Находим сообщение
     const message = await Message.findByPk(messageId);
-    if(!message) {
-      return res.status(404).json({ message:'Вы не являетесь автором этого сообщения' });
-    };
+    if (!message) {
+      return res.status(404).json({ message: 'Сообщение не найдено' });
+    }
 
     // Проверяем, является ли пользователь автором сообщения
     if (message.senderId !== userId) {
       return res.status(403).json({ message: 'Вы не являетесь автором этого сообщения' });
     }
 
-    // Обновляем содержимое + Сохраняем содержимое в БД
+    // Обновляем содержимое + сохраняем в БД
     message.content = newContent;
     await message.save();
 
@@ -162,8 +154,8 @@ exports.editMessage = async (req, res) => {
             JSON.stringify({
               type: 'editMessage',
               id: message.id,
-              content: newContent, // Используйте новое содержимое
-              senderId: userId, // Добавьте ID пользователя
+              content: newContent,
+              senderId: userId,
               chatId: message.chatId,
               createdAt: message.createdAt.toLocaleString(),
             })
@@ -173,18 +165,15 @@ exports.editMessage = async (req, res) => {
     }
 
     res.json({ message: 'Сообщение успешно отредактировано', message });
-
-  } catch(error) {
-    console.error( 'Ошибка при редактировании сообщения:', error);
+  } catch (error) {
+    console.error('Ошибка при редактировании сообщения:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
-
 };
 
+// Удаление сообщения
 exports.deleteMessage = async (req, res) => {
-
   try {
-
     const { messageId } = req.params;
     const userId = req.userId;
 
@@ -212,7 +201,7 @@ exports.deleteMessage = async (req, res) => {
               type: 'deleteMessage',
               id: message.id,
               chatId: message.chatId,
-              createdAt: message.createdAt.toLocaleString(), // Добавьте createdAt
+              createdAt: message.createdAt.toLocaleString(),
             })
           );
         }
@@ -220,19 +209,16 @@ exports.deleteMessage = async (req, res) => {
     }
 
     res.json({ message: 'Сообщение успешно удалено' });
-
   } catch (error) {
-
     console.error('Ошибка при удалении сообщения:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
-
   }
-  
 };
 
+// Пересылка сообщения
 exports.forwardMessage = async (req, res) => {
   try {
-    const { messageId, recipientId } = req.body; // Строка 50: получаем ID сообщения и ID чата
+    const { messageId, recipientId } = req.body;
     const userId = req.userId;
 
     // Находим исходное сообщение
@@ -247,13 +233,13 @@ exports.forwardMessage = async (req, res) => {
     }
 
     // Находим чат получателя
-    const recipientChat = await Chat.findByPk(recipientId); // Строка 60: ищем чат по ID
+    const recipientChat = await Chat.findByPk(recipientId);
     if (!recipientChat) {
       return res.status(404).json({ message: 'Чат получателя не найден' });
     }
 
     // Проверяем, является ли пользователь участником чата получателя
-    const isParticipant = await recipientChat.hasParticipant(userId); // Строка 65
+    const isParticipant = await recipientChat.hasParticipant(userId);
     if (!isParticipant) {
       return res.status(403).json({ message: 'Вы не являетесь участником этого чата' });
     }
@@ -263,6 +249,12 @@ exports.forwardMessage = async (req, res) => {
       content: originalMessage.content,
       senderId: userId,
       chatId: recipientChat.id,
+    });
+
+    // Создаем запись о пересылке
+    await ForwardedMessages.create({ // Строка 255
+      originalMessageId: messageId,
+      forwardedChatId: recipientChat.id,
     });
 
     // Отправляем событие через WebSocket
@@ -291,29 +283,26 @@ exports.forwardMessage = async (req, res) => {
   }
 };
 
+// Получение истории пересылок
 exports.getForwardedMessages = async (req, res) => {
   try {
-    const { chatId } = req.params;
+    const { messageId } = req.params;
 
-    const messages = await Message.findAll({
-      where: { chatId },
+    // Находим историю пересылок для сообщения
+    const forwardedHistory = await ForwardedMessages.findAll({ // Строка 292
+      where: { originalMessageId: messageId },
       include: [
         {
-          model: User,
-          as: 'sender',
-          attributes: ['id', 'nickname'],
-        },
-        {
           model: Chat,
-          as: 'originalChat', // Таблица для хранения оригинального чата
-          attributes: ['id'],
+          as: 'forwardedChat',
+          attributes: ['id', 'type'],
         },
       ],
     });
 
-    res.json({ messages });
+    res.json({ forwardedHistory });
   } catch (error) {
-    console.error('Ошибка при получении пересланных сообщений:', error);
+    console.error('Ошибка при получении истории пересылок:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
