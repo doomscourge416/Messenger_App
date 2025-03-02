@@ -23,7 +23,7 @@ fs.readdirSync(__dirname)
 // Установка ассоциаций
 Object.keys(models).forEach((modelName) => {
   if ('associate' in models[modelName]) {
-    models[modelName].associate(models);
+    models[modelName].associate(models); // Строка 25
   }
 });
 

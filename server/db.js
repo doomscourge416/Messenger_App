@@ -8,17 +8,10 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
   logging: false,
 });
 
-// Загрузка моделей
-const models = require('./models');
-
-// Добавляем sequelize и Sequelize в объект models
-models.sequelize = sequelize;
-models.Sequelize = Sequelize;
+// Загрузка моделей через models/index.js
+const models = require('./models/index'); // Строка 10
 
 module.exports = {
+  ...models,
   sequelize,
-  User: require('./models/User')(sequelize, DataTypes),
-  Chat: require('./models/Chat')(sequelize, DataTypes),
-  Message: require('./models/Message')(sequelize, DataTypes),
-  ForwardedMessages: require('./models/ForwardedMessages')(sequelize, DataTypes), // Строка 10
 };

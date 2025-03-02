@@ -6,6 +6,10 @@ const Profile = ({ token }) => {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [emailVisibility, setEmailVisibility] = useState(false);
 
+  // Состояние формы изменения пароля
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
   useEffect(() => {
     // Получаем информацию о текущем пользователе
     const fetchUser = async () => {
@@ -64,6 +68,30 @@ const Profile = ({ token }) => {
     }
   };
 
+
+  // Метод для изменения пароля
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+
+    try {
+      await axios.put(
+        '/api/auth/change-password',
+        { oldPassword, newPassword },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert('Пароль успешно изменен!');
+      setOldPassword(''); // Очищаем старый пароль
+      setNewPassword(''); // Очищаем новый пароль
+    } catch (error) {
+      console.error('Ошибка при изменении пароля:', error.response?.data || error.message);
+      alert('Не удалось изменить пароль. Проверьте данные.');
+    }
+  };
+
+
   return (
     <div>
       <h2>Профиль</h2>
@@ -82,6 +110,34 @@ const Profile = ({ token }) => {
 
       {/* Переключение видимости email */}
       <button onClick={handleToggleEmailVisibility}>Переключить видимость email</button> {/* Строка 70 */}
+
+      {/* Форма для изменения пароля */}
+      <form onSubmit={handleChangePassword}>
+
+        <div>
+          <label>Текущий пароль:</label>
+          <input
+            type='password'
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            placeholder='Введите текущий пароль'
+            required
+          />
+        </div>
+
+        <div>
+          <label>Новый пароль:</label>
+          <input
+            type='password'
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder='Введите новый пароль'
+            required
+          />
+        </div>
+        <button type='submit'>Изменить пароль</button>
+
+      </form>
     </div>
   );
 };

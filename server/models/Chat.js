@@ -30,14 +30,12 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     if (models.User) {
-      Chat.belongsToMany(models.User, {
+      Chat.belongsToMany(models.User, { // Строка 15
         through: 'ChatParticipants',
         as: 'participants',
         foreignKey: 'chatId',
         otherKey: 'userId',
       });
-
-      Chat.belongsTo(models.User, { foreignKey: 'adminId', as: 'admin' }); // Строка 25: добавляем ассоциацию
     }
   };
 

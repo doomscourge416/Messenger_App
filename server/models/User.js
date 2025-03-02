@@ -57,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
     if (models.Message) {
       User.hasMany(models.Message, { foreignKey: 'senderId', as: 'messages' });
     }
-
+  
     if (models.Contact) {
       User.belongsToMany(models.User, {
         through: models.Contact,
@@ -66,7 +66,7 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'contactId',
       });
     }
-
+  
     if (models.Chat) {
       User.belongsToMany(models.Chat, {
         through: 'ChatParticipants',

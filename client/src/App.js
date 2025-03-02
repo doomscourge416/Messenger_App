@@ -4,12 +4,15 @@ import axios from 'axios';
 import ChatList from './components/ChatList';
 import Login from './components/Login';
 import Register from './components/Register'; 
+import Profile from './components/Profile';
+import ForgotPassword from './components/ForgotPassword';
+import resetPassword from './components/ResetPassword';
 
 function App() {
   const [token, setToken] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
-  // const [userId, setUserId] = useState(null); // Неиспользуется userId
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   // Обработка входа
   const handleLogin = (newToken, newUserId) => {
@@ -22,13 +25,10 @@ function App() {
 
   // Обработка выхода
   const handleLogout = () => {
-    
     setToken(null);
     setUserId(null);
-
     localStorage.removeItem('messengerToken');
     alert('Вы вышли из системы.');
-
   };
 
   // Преключение на форму регистрации
@@ -41,6 +41,9 @@ function App() {
     setIsRegistering(false);
   };
 
+  const handleForgotPasswordClick = () => setIsForgotPassword(true); 
+  const handleBackClick = () => setIsForgotPassword(false);
+
   
   return (
     <div className="App">
@@ -49,16 +52,21 @@ function App() {
       {!token ? (
         isRegistering ? (
           <Register onRegister={handleLoginClick} />
+        ) : isForgotPassword ? ( 
+          <ForgotPassword onBack={handleBackClick} />
         ) : (
           <Login 
             onLogin={handleLogin} 
-            onRegister={handleRegisterClick} // Передаем handleRegisterClick как onRegister
+            onRegister={handleRegisterClick} 
+            onForgotPassword={handleForgotPasswordClick} 
           />
         )
       ) : (
         <div>
           <button onClick={handleLogout}>Выйти</button>
-          <ChatList token={token} />
+          
+          {/* Отображаем профиль */}
+          <Profile token={token} />
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 const { User } = require('../db');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const emailService = require('../services/emailService');
 
 exports.register = async (req, res) => {
@@ -55,4 +56,124 @@ exports.login = async (req, res) => {
     console.error('Ошибка при входе:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.userId;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Необходимо указать oldPassword и newPassword' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Новый пароль должен быть минимум 6 символов' });
+    }
+
+    // Находим пользователя
+    const user = await User.findByPk(userId); // Строка 10
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    // Проверяем старый пароль
+    const isPasswordValid = await user.validatePassword(oldPassword);
+    if (!isPasswordValid) {
+      return res.status(403).json({ message: 'Неверный текущий пароль' });
+    }
+
+    // Устанавливаем новый пароль
+    await user.setPassword(newPassword);
+    await user.save();
+
+    res.json({ message: 'Пароль успешно изменен' });
+  } catch (error) {
+    console.error('Ошибка при изменении пароля:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
+exports.sendResetPasswordEmail = async (req, res) => {
+
+  try {
+
+    const { email } = req.body;
+
+    if(!email) {
+      return res.status(400).json({ message: 'Необходимо указать email' });
+    }
+
+    // Находим пользователя по email
+    const user = await User.findOne({ where: { email }});
+    if(!user) {
+      return res.status(404).json({ message: 'Пользователь с таким email не найден' });
+    }
+
+    // Генерируем токен восстановления
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    user.sendResetPasswordToken = resetToken;
+    user.sendResetPasswordExpires = Date.now(); + 3600000;
+    await user.save();
+
+    // Отправляем ссылку восстановления
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+    await emailService.sendEmail(
+      user.email,
+      'Восстановление пароля',
+      `Для сброса пароля перейдите по ссылке: ${resetUrl}`
+    );
+
+    res.json({ message: 'Ссылка для восстановления пароля отправлена на ваш email' });
+
+  } catch(error) {
+
+    console.error('Ошибка при отправке ссылки восстановления', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+
+  };
+
+};
+
+exports.resetPassword = async (req, res) => {
+
+  try {
+
+    const { token, newPassword } = req.body;
+
+    if(!token || !newPassword) {
+      return res.status(400).json({ message: 'Необходимо указать token и newPassword' }); 
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Новый пароль должен быть минимум 6 символов' });
+    }
+
+    // Находим пользователя по токену восстановления
+    const user = await User.findOne({
+      where: {
+        sendResetPasswordToken: token,
+        sendResetPasswordExpires: { [Op.gt]: Date.now() },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Токен восстановления недействителен или истек' });
+    }
+
+    // Устанавливаем новый пароль
+    await user.setPassword(newPassword);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    res.json({ message: 'Пароль успешно сброшен' });
+
+  } catch(error) {
+
+    console.error('Ошибка при сбросе пароля:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+
+  }
+
 };

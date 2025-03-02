@@ -30,4 +30,13 @@ router.get('/protected', authMiddleware, (req, res) => {
     res.json({ message: 'Этот маршрут защищен' });
 });
 
+// Отправка ссылки восстановления
+router.post('/forgot-password', authController.sendResetPasswordEmail);
+
+// Сброс пароля 
+router.get('/reset-password', authController.resetPassword);
+
+// Изменение пароля
+router.put('/change-password', authMiddleware, authController.changePassword);
+
 module.exports = router;

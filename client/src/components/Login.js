@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const Login = ({ onLogin, onRegister }) => {
+const Login = ({ onLogin, onRegister, onForgotPassword }) => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -76,6 +76,7 @@ const Login = ({ onLogin, onRegister }) => {
                 </div>
 
                 <button type='submit'>Войти</button>
+                <button type="button" onClick={onForgotPassword}>Забыли пароль?</button>
                 <button type="button" onClick={onRegister}>Зарегистрироваться</button>
 
             </form>

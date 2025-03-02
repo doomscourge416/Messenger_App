@@ -55,7 +55,7 @@ exports.getChats = async (req, res) => {
       include: [
         {
           model: Chat,
-          as: 'chats',
+          as: 'chats', // Убедитесь, что используется правильный alias
           include: [
             {
               model: User,
@@ -67,13 +67,15 @@ exports.getChats = async (req, res) => {
       ],
     });
 
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
+    if (!user || !user.chats) {
+      return res.status(404).json({ message: 'Чаты не найдены' });
     }
+
+    console.log('Загруженные чаты:', user.chats);
 
     res.json({ chats: user.chats });
   } catch (error) {
-    console.error('Ошибка при получении списка чатов:', error);
+    console.error('Ошибка при получении чатов:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
