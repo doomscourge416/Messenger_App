@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const ForgotPassword = () => {
+const ForgotPassword = ({ onBack }) => {
 
     const [email, setEmail] = useState('');
 
@@ -20,6 +20,7 @@ const ForgotPassword = () => {
             );
 
             alert('Ссылка для восстановления пароля отправлена на ваш email!');
+            onBack();
 
         } catch(error) {
 
@@ -44,7 +45,8 @@ const ForgotPassword = () => {
                     required
                 />
                 </div>
-                <button type="submit">Отправить ссылку</button> {/* Строка 10 */}
+                <button type="submit">Отправить ссылку</button>
+                <button type="button" onClick={onBack}>Назад</button>
             </form>
         </div>
 

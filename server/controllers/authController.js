@@ -2,6 +2,7 @@ const { User } = require('../db');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const emailService = require('../services/emailService');
+const { Op } = require('sequelize');
 
 exports.register = async (req, res) => {
   try {
@@ -17,7 +18,7 @@ exports.register = async (req, res) => {
     }
 
     // Проверяем наличие такого email или nickname у существующих пользователей
-    const existingUser = await User.findOne({ where: { [Op.or]: [{ email }, { nickname }] } });
+    const existingUser = await User.findOne({ where: { [Op.or]: [{ email }, { nickname }], }, });
     if (existingUser) {
       return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
     }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const ResetPassword = ({ match }) => {
+const ResetPassword = ({ match, history }) => {
 
     const [newPassword, setNewPassword] = useState('');
     const resetToken = match.params.token;
@@ -21,6 +21,7 @@ const ResetPassword = ({ match }) => {
             );
 
             alert('Пароль успешно сброшен!');
+            history.push('/login');
 
         } catch(error) {
 

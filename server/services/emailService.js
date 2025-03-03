@@ -20,13 +20,15 @@ exports.sendEmail = async (to, subject, text) => {
     };
 
     // Отправляем email
-    const info = await transporter.sendMail(mailOptions); // Строка 19
+    const info = await transporter.sendMail(mailOptions);
 
-    if (info && info.messageId) {
-      console.log('Письмо отправлено:', info.messageId); // Строка 35
-    } else {
-      console.warn('Письмо не было отправлено или отсутствует messageId');
-    }
+    console.log('Email успешно отправлен:', info.messageId);
+
+    // if (info && info.messageId) {
+    //   console.log('Письмо отправлено:', info.messageId);
+    // } else {
+    //   console.warn('Письмо не было отправлено или отсутствует messageId');
+    // }
   } catch (error) {
     console.error('Ошибка при отправке email:', error.message);
   }

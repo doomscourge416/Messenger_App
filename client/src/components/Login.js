@@ -76,8 +76,9 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
                 </div>
 
                 <button type='submit'>Войти</button>
-                <button type="button" onClick={onForgotPassword}>Забыли пароль?</button>
                 <button type="button" onClick={onRegister}>Зарегистрироваться</button>
+                <button type="button" onClick={onForgotPassword}>Забыли пароль?</button>
+
 
             </form>
         </div>
