@@ -103,3 +103,75 @@ exports.transferAdmin = async (req, res) => {
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
+
+exports.banParticipant = async (req, res) => {
+  try {
+    const { chatId, participantId } = req.body;
+    const adminId = req.userId;
+
+    // Находим чат
+    const chat = await Chat.findByPk(chatId);
+    if (!chat) {
+      return res.status(404).json({ message: 'Чат не найден' });
+    }
+
+    // Проверяем, является ли пользователь администратором
+    if (chat.adminId !== adminId) {
+      return res.status(403).json({ message: 'Вы не являетесь администратором этого чата' });
+    }
+
+    // Находим участника чата
+    const participant = await ChatParticipants.findOne({
+      where: { chatId, userId: participantId },
+    });
+
+    if (!participant) {
+      return res.status(404).json({ message: 'Участник не найден' });
+    }
+
+    // Баним участника
+    participant.isBanned = true;
+    await participant.save();
+
+    res.json({ message: 'Участник успешно заблокирован' });
+  } catch (error) {
+    console.error('Ошибка при бане участника:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
+exports.unbanParticipant = async (req, res) => {
+  try {
+    const { chatId, participantId } = req.body;
+    const adminId = req.userId;
+
+    // Находим чат
+    const chat = await Chat.findByPk(chatId);
+    if (!chat) {
+      return res.status(404).json({ message: 'Чат не найден' });
+    }
+
+    // Проверяем, является ли пользователь администратором
+    if (chat.adminId !== adminId) {
+      return res.status(403).json({ message: 'Вы не являетесь администратором этого чата' });
+    }
+
+    // Находим участника чата
+    const participant = await ChatParticipants.findOne({
+      where: { chatId, userId: participantId },
+    });
+
+    if (!participant) {
+      return res.status(404).json({ message: 'Участник не найден' });
+    }
+
+    // Разбаниваем участника
+    participant.isBanned = false;
+    await participant.save();
+
+    res.json({ message: 'Участник успешно разблокирован' });
+  } catch (error) {
+    console.error('Ошибка при разбане участника:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};

@@ -20,4 +20,10 @@ router.get('/list', authMiddleware, chatController.getChats);
 // Назначение нового администратора
 router.post('/transfer-admin', authMiddleware, chatController.transferAdmin);
 
+// Бан участника
+router.put('/ban-participant', authMiddleware, chatController.banParticipant);
+
+// Разбан участника
+router.put('/unban-participant', authMiddleware, chatController.unbanParticipant);
+
 module.exports = router;

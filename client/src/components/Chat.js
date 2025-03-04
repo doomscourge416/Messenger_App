@@ -197,6 +197,44 @@ const Chat = ({ chatId, token }) => {
     }
 
   };
+  
+
+  const handleBanParticipant = async (participantId) => {
+    try {
+      await axios.put(
+        '/api/chats/ban-participant',
+        { chatId, participantId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      alert('Участник успешно заблокирован!');
+      fetchParticipants(); // Обновляем список участников
+    } catch (error) {
+      console.error('Ошибка при бане участника:', error.response?.data || error.message);
+      alert('Не удалось заблокировать участника.');
+    }
+  };
+
+  
+  const handleUnbanParticipant = async (participantId) => {
+    try {
+      await axios.put(
+        '/api/chats/unban-participant',
+        { chatId, participantId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      alert('Участник успешно разблокирован!');
+      fetchParticipants(); // Обновляем список участников
+    } catch (error) {
+      console.error('Ошибка при разбане участника:', error.response?.data || error.message);
+      alert('Не удалось разблокировать участника.');
+    }
+  };
 
 
 
@@ -205,7 +243,7 @@ const Chat = ({ chatId, token }) => {
       <h2>Чат #{chatId}</h2>
 
       <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-        <button onClick={() => handleMute(chatId)}>Отключить уведомления</button> {/* Строка 40 */}
+        <button onClick={() => handleMute(chatId)}>Отключить уведомления</button>
       </div>
 
       <div style={{ display: 'inline-block', marginLeft: '10px' }}>
@@ -242,6 +280,18 @@ const Chat = ({ chatId, token }) => {
             </div>
           </div>
         ))}
+      </div>
+
+      <div>
+
+        <strong>{participant.nickname}</strong>
+        {isAdmin && !participant.isBanned && ( 
+          <button onClick={() => handleBanParticipant(participant.id)}>Забанить</button>
+        )}
+        {isAdmin && participant.isBanned && (
+          <button onClick={() => handleUnbanParticipant(participant.id)}>Разбанить</button>
+        )}
+
       </div>
 
       {/* Форма для отправки сообщения */}
