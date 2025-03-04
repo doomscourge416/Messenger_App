@@ -14,10 +14,12 @@ TODO:2. Вход в систему
 
 curl -X POST http://localhost:5000/api/auth/login \
 -H "Content-Type: application/json" \
--d '{"email":"user2@example.com","password":"password123"}'
+-d '{"email":"trytolookagain@gmail.com","password":"Simusa18"}'
 
 Ответ:  
 {
+  "jet_7@list token ": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsImlhdCI6MTc0MTA4MTgzNiwiZXhwIjoxNzQxMDg1NDM2fQ.-J7gpzeejLjj6bTlhC1VtF84crcjaz7F1KFJIDQumfM
+  "trytolookagain token": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjgsImlhdCI6MTc0MTA4MTYxOCwiZXhwIjoxNzQxMDg1MjE4fQ.bjpjVMJdFHVvUXJEoQSKor3YmjCENW-4f22oSCMaGZ4 
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0MDMwODU2MywiZXhwIjoxNzQwMzEyMTYzfQ.ChbTHM52MuYcGquwR-bXE_r_wVN0UA7ePwyh93pa6j0"
 }
  

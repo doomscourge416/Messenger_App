@@ -1,24 +1,27 @@
-import React, { useState } from 'react';
 // import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import ChatList from './components/ChatList';
+// import axios from 'axios';
+// import ChatList from './components/ChatList';
+
+import React, { useState } from 'react';
 import Login from './components/Login';
 import Register from './components/Register'; 
 import Profile from './components/Profile';
 import ForgotPassword from './components/ForgotPassword';
-import resetPassword from './components/ResetPassword';
+import ResetPassword from './components/ResetPassword';
 
 function App() {
+  // const [userId, setUserId] = useState(null);
   const [token, setToken] = useState(null);
-  const [userId, setUserId] = useState(null);
+  const [setUserId] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
 
   // Обработка входа
-  const handleLogin = (newToken, newUserId) => {
+  const handleLogin = (newToken) => {
 
     setToken(newToken);
-    setUserId(newUserId);
+    // setUserId(newUserId);
     localStorage.setItem('messengerToken', newToken);
 
   };
@@ -26,23 +29,19 @@ function App() {
   // Обработка выхода
   const handleLogout = () => {
     setToken(null);
-    setUserId(null);
+    // setUserId(null);
     localStorage.removeItem('messengerToken');
     alert('Вы вышли из системы.');
   };
 
-  // Преключение на форму регистрации
-  const handleRegisterClick = () => {
-    setIsRegistering(true);
-  };
-
-  // Возврат к форме входа
-  const handleLoginClick = () => {
-    setIsRegistering(false);
-  };
+  const handleRegisterClick = () => setIsRegistering(true);
+  const handleLoginClick = () => setIsRegistering(false);
 
   const handleForgotPasswordClick = () => setIsForgotPassword(true); 
   const handleBackClick = () => setIsForgotPassword(false);
+
+  const handleResetPasswordClick = () => setIsResetPassword(true); // Сброс пароля
+  const handleResetBackClick = () => setIsResetPassword(false); 
 
   
   return (
@@ -51,9 +50,14 @@ function App() {
 
       {!token ? (
         isRegistering ? (
-          <Register onRegister={handleLoginClick} />
-        ) : isForgotPassword ? ( 
-          <ForgotPassword onBack={handleBackClick} />
+          <Register onBack={handleLoginClick} />
+        ) : isForgotPassword ? (
+          <ForgotPassword 
+            onBack={handleBackClick} 
+            onReset={handleResetPasswordClick}
+          />
+        ) : isResetPassword ? (
+          <ResetPassword onBack={handleResetBackClick} />
         ) : (
           <Login 
             onLogin={handleLogin} 

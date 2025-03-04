@@ -43,6 +43,14 @@ module.exports = (sequelize, DataTypes) => {
       verificationToken: {
         type: DataTypes.STRING,
       },
+
+      resetCode: {
+        type: DataTypes.STRING,
+      },
+
+      resetCodeExpires: {
+        type: DataTypes.DATE,
+      },
       
     },
     {

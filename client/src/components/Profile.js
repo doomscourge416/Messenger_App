@@ -105,6 +105,7 @@ const Profile = ({ token }) => {
         </div>
       )}
 
+
       {/* Изменение аватара */}
       <button onClick={handleUpdateAvatar}>Изменить аватар</button>
 

@@ -95,44 +95,116 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-exports.sendResetPasswordEmail = async (req, res) => {
+// exports.sendResetPasswordEmail = async (req, res) => {
+
+//   try {
+
+//     const { email } = req.body;
+
+//     if(!email) {
+//       return res.status(400).json({ message: 'Необходимо указать email' });
+//     }
+
+//     // Находим пользователя по email
+//     const user = await User.findOne({ where: { email }});
+//     if(!user) {
+//       return res.status(404).json({ message: 'Пользователь с таким email не найден' });
+//     }
+
+//     // Генерируем токен восстановления
+//     const resetToken = crypto.randomBytes(20).toString('hex');
+//     user.sendResetPasswordToken = resetToken;
+//     user.sendResetPasswordExpires = Date.now(); + 3600000;
+//     await user.save();
+
+//     // Отправляем ссылку восстановления
+//     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+//     await emailService.sendEmail(
+//       user.email,
+//       'Восстановление пароля',
+//       `Для сброса пароля перейдите по ссылке: ${resetUrl}`
+//     );
+
+//     res.json({ message: 'Ссылка для восстановления пароля отправлена на ваш email' });
+
+//   } catch(error) {
+
+//     console.error('Ошибка при отправке ссылки восстановления', error);
+//     res.status(500).json({ message: 'Ошибка сервера' });
+
+//   };
+
+// };
+
+exports.generateResetCode = async (req, res) => {
 
   try {
-
     const { email } = req.body;
 
-    if(!email) {
+    if (!email) {
       return res.status(400).json({ message: 'Необходимо указать email' });
     }
 
-    // Находим пользователя по email
-    const user = await User.findOne({ where: { email }});
-    if(!user) {
+    // Находим пользователя
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
       return res.status(404).json({ message: 'Пользователь с таким email не найден' });
     }
 
-    // Генерируем токен восстановления
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    user.sendResetPasswordToken = resetToken;
-    user.sendResetPasswordExpires = Date.now(); + 3600000;
+    // Генерируем код восстановления
+    const resetCode = crypto.randomBytes(4).toString('hex').toUpperCase(); // 4-символьный код
+    user.resetCode = resetCode;
+    user.resetCodeExpires = Date.now() + 3600000; // Код действителен 1 час
     await user.save();
 
-    // Отправляем ссылку восстановления
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-    await emailService.sendEmail(
-      user.email,
-      'Восстановление пароля',
-      `Для сброса пароля перейдите по ссылке: ${resetUrl}`
-    );
-
-    res.json({ message: 'Ссылка для восстановления пароля отправлена на ваш email' });
-
-  } catch(error) {
-
-    console.error('Ошибка при отправке ссылки восстановления', error);
+    // Возвращаем код пользователю (можно показать на экране)
+    res.json({ message: 'Код восстановления успешно сгенерирован', resetCode });
+  } catch (error) {
+    console.error('Ошибка при генерации кода:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
+  }
 
-  };
+};
+
+exports.verifyResetCode = async (req,res) => {
+
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ message: 'Необходимо указать email, resetCode и newPassword' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Новый пароль должен быть минимум 6 символов' });
+    }
+
+    const user = await User.findOne({
+      where: {
+        email,
+        resetCode,
+        resetCodeExpires: { [Op.gt]: Date.now() }, // Проверяем, что код еще действителен
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Код восстановления недействителен или истек' });
+    }
+
+    // Сбрасываем пароль
+    await user.setPassword(newPassword);
+    user.resetCode = null; // Очищаем код после использования
+    user.resetCodeExpires = null;
+    await user.save();
+
+    // Генерируем новый токен
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Строка 200
+
+    res.json({ message: 'Пароль успешно сброшен', token });
+  } catch (error) {
+    console.error('Ошибка при проверке кода:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
 
 };
 

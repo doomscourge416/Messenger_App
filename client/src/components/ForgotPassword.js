@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const ForgotPassword = ({ onBack }) => {
+
+const ForgotPassword = ({ onBack, onReset }) => {
 
     const [email, setEmail] = useState('');
+    const [resetCode, setResetCode] = useState(null);
 
     const handleSubmit = async (e) => {
 
@@ -11,7 +13,8 @@ const ForgotPassword = ({ onBack }) => {
 
         try {
 
-            await axios.post(
+
+            const response = await axios.post(
                 '/api/auth/forgot-password',
                 { email },
                 {
@@ -19,8 +22,14 @@ const ForgotPassword = ({ onBack }) => {
                 }
             );
 
-            alert('Ссылка для восстановления пароля отправлена на ваш email!');
-            onBack();
+            if (response.data.resetCode) {
+                setResetCode(response.data.resetCode); // Получаем код восстановления
+                alert(`Код восстановления: ${response.data.resetCode}. Сохраните его.`);
+                onReset();
+                // onBack();
+            } else {
+                alert('Не удалось получить код восстановления.')
+            }
 
         } catch(error) {
 
@@ -45,9 +54,16 @@ const ForgotPassword = ({ onBack }) => {
                     required
                 />
                 </div>
-                <button type="submit">Отправить ссылку</button>
+                <button type="submit">Получить код</button>
                 <button type="button" onClick={onBack}>Назад</button>
             </form>
+
+            {/* Отображаем код восстановления */}
+            {resetCode && (
+                <p>
+                    Ваш код восстановления: <strong>{resetCode}</strong>
+                </p>
+            )}
         </div>
 
     );
