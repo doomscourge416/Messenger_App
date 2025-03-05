@@ -86,11 +86,11 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   User.prototype.setPassword = async function (password) {
-    this.password = await bcrypt.hash(password, 10);
+    this.password = await bcrypt.hash(password, 10); // Хешируем пароль
   };
-
+  
   User.prototype.validatePassword = async function (password) {
-    return await bcrypt.compare(password, this.password);
+    return await bcrypt.compare(password, this.password); // Сравниваем хеш
   };
 
   User.prototype.generateVerificationToken = generateVerificationToken;

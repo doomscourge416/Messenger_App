@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const Profile = ({ token }) => {
+const Profile = ({ token, onClose }) => {
   const [user, setUser] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [emailVisibility, setEmailVisibility] = useState(false);
@@ -94,16 +94,21 @@ const Profile = ({ token }) => {
 
   return (
     <div>
-      <h2>Профиль</h2>
 
-      {/* Отображение информации о пользователе */}
-      {user && (
-        <div>
-          <img src={user.avatarUrl || '/default-avatar.png'} alt="Avatar" style={{ width: '50px', height: '50px' }} />
-          <p>Никнейм: {user.nickname}</p>
-          <p>Email: {emailVisibility ? user.email : 'Скрыт'}</p>
-        </div>
-      )}
+      <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '5px', maxWidth: '400px', margin: '20px auto' }}>
+        <h2>Профиль</h2>
+        {user && (
+          <div>
+            <p>Никнейм: {user.nickname}</p>
+            <p>Email: {user.isEmailVisible ? user.email : 'Скрыт'}</p>
+            <img src={user.avatarUrl || '/default-avatar.png'} alt="Avatar" style={{ width: '50px', height: '50px' }} />
+          </div>
+        )}
+
+        {/* Кнопка закрытия профиля */}
+        <button onClick={onClose}>Закрыть профиль</button> {/* Строка 90 */}
+        
+      </div>
 
 
       {/* Изменение аватара */}

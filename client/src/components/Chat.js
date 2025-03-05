@@ -2,18 +2,25 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import WebSocketService from '../services/websocket';
 
-
 const Chat = ({ chatId, token }) => {
-  const [messages, setMessages] = useState([]);
-  const [content, setContent] = useState('');
-  // const [ws, setWs] = useState(null); TODO: нужна ли эта строка???
+  const [messages, setMessages] = useState([]); // Состояние для сообщений
+  const [content, setContent] = useState(''); // Состояние для нового сообщения
+  const [participants, setParticipants] = useState([]); // Состояние для участников чата
+  const [isAdmin, setIsAdmin] = useState(false); // Строка 10: состояние для прав администратора
+  const [isMuted, setIsMuted] = useState(false); // Строка 40: состояние для мутинга чата
+  const [forwardedHistory, setForwardedHistory] = useState([]); // Состояние для истории пересылок
+
+  const [searchQuery, setSearchQuery] = useState(''); // Строка 30: строка поиска
+  const [foundUsers, setFoundUsers] = useState([]); // Найденные пользователи
 
   useEffect(() => {
+    if (!chatId) return;
+
     // Создаем экземпляр WebSocket
-    const websocket = new WebSocketService(chatId);
-  
+    const websocket = new WebSocketService(chatId); // Строка 30: исправляем WebSock etService → WebSocketService
+
     // Подключаемся и передаем коллбэк для обработки сообщений
-    websocket.connect((data) => { // Строка 30: передаем коллбэк
+    websocket.connect((data) => {
       if (data.type === 'newMessage') {
         setMessages((prevMessages) => [...prevMessages, data]);
       } else if (data.type === 'editMessage') {
@@ -24,23 +31,23 @@ const Chat = ({ chatId, token }) => {
         setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== data.id));
       }
     });
-  
+
     // Очистка WebSocket при размонтировании компонента
     return () => {
       websocket.disconnect();
     };
   }, [chatId]);
 
-  const [isMuted, setIsMuted] = useState(false); // Строка 40
-
+  // Получение настроек уведомлений
   useEffect(() => {
     const fetchNotificationSettings = async () => {
       try {
+        if (!chatId) return; // Строка 45: проверяем chatId
         const response = await axios.get(`/api/notifications/${chatId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setIsMuted(response.data.isMuted); // Строка 45
+        setIsMuted(response.data.isMuted);
       } catch (error) {
         console.error('Ошибка при получении настроек уведомлений:', error.response?.data || error.message);
       }
@@ -49,11 +56,11 @@ const Chat = ({ chatId, token }) => {
     fetchNotificationSettings();
   }, [chatId, token]);
 
-
   // Получение истории сообщений
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        if (!chatId) return;
         const response = await axios.get(`/api/messages/chat/${chatId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -65,6 +72,40 @@ const Chat = ({ chatId, token }) => {
     };
 
     fetchMessages();
+  }, [chatId, token]);
+
+  const fetchParticipants = async () => {
+    try {
+      if (!chatId) return;
+
+      const response = await axios.get(`/api/chats/participants/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data.participants) {
+        setParticipants(response.data.participants); // Устанавливаем участников
+      } else {
+        console.warn('Сервер не вернул список участников:', response.data);
+        alert('Не удалось загрузить участников чата.');
+      }
+
+      // Проверяем права администратора
+      const chatResponse = await axios.get(`/api/chats/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setIsAdmin(chatResponse.data.chat.adminId === parseInt(localStorage.getItem('userId'), 10));
+    } catch (error) {
+      console.error('Ошибка при получении участников чата:', error.response?.data || error.message);
+      alert('Не удалось получить список участников.');
+    }
+  };
+
+  // Получение списка участников чата
+  useEffect(() => {
+    if (chatId) {
+      fetchParticipants(); // Вызываем функцию при загрузке компонента
+    }
   }, [chatId, token]);
 
   // Отправка сообщения через API
@@ -83,6 +124,7 @@ const Chat = ({ chatId, token }) => {
       setContent(''); // Очищаем поле ввода
     } catch (error) {
       console.error('Ошибка при отправке сообщения:', error.response?.data || error.message);
+      alert('Не удалось отправить сообщение.');
     }
   };
 
@@ -98,12 +140,11 @@ const Chat = ({ chatId, token }) => {
       );
 
       setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === messageId ? { ...msg, content: newContent } : msg
-        )
+        prevMessages.map((msg) => (msg.id === messageId ? { ...msg, content: newContent } : msg))
       );
     } catch (error) {
       console.error('Ошибка при редактировании сообщения:', error.response?.data || error.message);
+      alert('Не удалось отредактировать сообщение.');
     }
   };
 
@@ -117,23 +158,24 @@ const Chat = ({ chatId, token }) => {
       setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== messageId));
     } catch (error) {
       console.error('Ошибка при удалении сообщения:', error.response?.data || error.message);
+      alert('Не удалось удалить сообщение.');
     }
   };
 
-  // Пересылка сообщений 
+  // Пересылка сообщений
   const handleForward = async (messageId) => {
     try {
-      const chatId = prompt('Введите ID чата получателя:'); // Строка 25: просим ID чата
-      if (!chatId) return;
-  
+      const recipientChatId = prompt('Введите ID чата получателя:'); // Строка 25: просим ID чата
+      if (!recipientChatId) return;
+
       await axios.post(
         '/api/messages/forward',
-        { messageId, recipientId: chatId }, // Строка 27: передаем ID чата
+        { messageId, recipientId: recipientChatId }, // Строка 27: передаем ID чата
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-  
+
       alert('Сообщение успешно переслано!');
     } catch (error) {
       console.error('Ошибка при пересылке сообщения:', error.response?.data || error.message);
@@ -141,64 +183,21 @@ const Chat = ({ chatId, token }) => {
     }
   };
 
-  const handleMute = async (chatId) => {
-    try {
-      await axios.post(
-        '/api/notifications/mute',
-        { chatId },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-  
-      setIsMuted((prev) => !prev); // Строка 50: переключаем статус mute
-      alert('Настройки уведомлений обновлены!');
-    } catch (error) {
-      console.error('Ошибка при управлении уведомлениями:', error.response?.data || error.message);
-      alert('Не удалось обновить настройки уведомлений.');
-    }
-  };
-
-
-  const handleTransferAdmin = async () => {
-    try {
-      const newAdminId = prompt('Введите ID нового администратора:');
-      if (!newAdminId) return;
-  
-      await axios.post(
-        '/api/chats/transfer-admin',
-        { chatId, newAdminId },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-  
-      alert('Администратор успешно назначен!');
-    } catch (error) {
-      console.error('Ошибка при назначении администратора:', error.response?.data || error.message);
-      alert('Не удалось назначить нового администратора.');
-    }
-  };
-
-
-  const [ forwardedHistory, setForwardedHistory ] = useState([]);
-
+  // Показать историю пересылок
   const handleShowForwardedHistory = async (messageId) => {
-
     try {
       const response = await axios.get(`/api/messages/forwarded/${messageId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       setForwardedHistory(response.data.forwardedHistory); // Строка 70
     } catch (error) {
       console.error('Ошибка при получении истории пересылок:', error.response?.data || error.message);
       alert('Не удалось получить историю пересылок.');
     }
-
   };
-  
 
+  // Бан/разбан участника
   const handleBanParticipant = async (participantId) => {
     try {
       await axios.put(
@@ -208,7 +207,7 @@ const Chat = ({ chatId, token }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-  
+
       alert('Участник успешно заблокирован!');
       fetchParticipants(); // Обновляем список участников
     } catch (error) {
@@ -217,7 +216,6 @@ const Chat = ({ chatId, token }) => {
     }
   };
 
-  
   const handleUnbanParticipant = async (participantId) => {
     try {
       await axios.put(
@@ -227,7 +225,7 @@ const Chat = ({ chatId, token }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-  
+
       alert('Участник успешно разблокирован!');
       fetchParticipants(); // Обновляем список участников
     } catch (error) {
@@ -237,75 +235,222 @@ const Chat = ({ chatId, token }) => {
   };
 
 
+  const handleSearchUsers = async () => {
+    if (!searchQuery.trim()) {
+      setFoundUsers([]); // Очищаем список, если запрос пустой
+      return;
+    }
 
-  return (
+    try {
+      const response = await axios.get(`/api/users/search?query=${searchQuery}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setFoundUsers(response.data.users); // Убедитесь, что сервер возвращает users
+    } catch (error) {
+      console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
+      alert('Не удалось найти пользователей.');
+    }
+  };
+
+  // Поиск пользователей
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      handleSearchUsers();
+    }, 300); // Задержка для дебаунса
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, token]);
+
+  // Мутинг чата
+const handleMute = async () => {
+  try {
+    await axios.post(
+      `/api/notifications/mute`,
+      { chatId },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    setIsMuted((prev) => !prev); // Переключаем статус mute
+    alert('Настройки уведомлений обновлены!');
+  } catch (error) {
+    console.error('Ошибка при управлении уведомлениями:', error.response?.data || error.message);
+    alert('Не удалось обновить настройки уведомлений.');
+  }
+};
+
+// Назначение нового администратора
+const handleTransferAdmin = async () => {
+  try {
+    const newAdminId = prompt('Введите ID нового администратора:');
+    if (!newAdminId) return;
+
+    await axios.post(
+      '/api/chats/transfer-admin',
+      { chatId, newAdminId },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    alert('Администратор успешно назначен!');
+  } catch (error) {
+    console.error('Ошибка при назначении администратора:', error.response?.data || error.message);
+    alert('Не удалось назначить нового администратора.');
+  }
+};
+
+// Поиск пользователей с дебаунсом
+useEffect(() => {
+  const handleSearchUsers = async () => {
+    if (!searchQuery.trim()) {
+      setFoundUsers([]); // Очищаем список, если запрос пустой
+      return;
+    }
+
+    try {
+      const response = await axios.get(`/api/users/search?query=${searchQuery}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setFoundUsers(response.data.users); // Убедитесь, что сервер возвращает users
+    } catch (error) {
+      console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
+      alert('Не удалось найти пользователей.');
+    }
+  };
+
+  const delayDebounceFn = setTimeout(() => {
+    handleSearchUsers();
+  }, 300); // Задержка для дебаунса
+
+  return () => clearTimeout(delayDebounceFn);
+}, [searchQuery, token]);
+
+// Добавление участника в чат
+const handleAddParticipant = async (participantId) => {
+  try {
+    await axios.post(
+      '/api/chats/add-participant',
+      { chatId, participantId },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    alert('Участник успешно добавлен!');
+    fetchParticipants(); // Обновляем список участников
+  } catch (error) {
+    console.error('Ошибка при добавлении участника:', error.response?.data || error.message);
+    alert('Не удалось добавить участника.');
+  }
+};
+
+return (
+  <div>
+    <h2>Чат #{chatId}</h2>
+
+    {/* Кнопки управления чатом */}
     <div>
-      <h2>Чат #{chatId}</h2>
+      <button onClick={handleMute}>Отключить уведомления</button> {/* Строка 50 */}
+      <button onClick={handleTransferAdmin}>Назначить администратора</button>
+    </div>
 
-      <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-        <button onClick={() => handleMute(chatId)}>Отключить уведомления</button>
-      </div>
+    {/* Список участников чата */}
+    <div>
+      <h3>Участники чата:</h3>
+      {participants.length > 0 ? (
+        participants.map((participant) => (
+          <div key={participant.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+            <strong>{participant.nickname}</strong>
+            {isAdmin && !participant.isBanned && ( // Строка 288: проверяем права администратора
+              <button onClick={() => handleBanParticipant(participant.id)}>Забанить</button>
+            )}
+            {isAdmin && participant.isBanned && ( // Строка 291: проверяем права администратора
+              <button onClick={() => handleUnbanParticipant(participant.id)}>Разбанить</button>
+            )}
+          </div>
+        ))
+      ) : (
+        <p>Нет участников в этом чате.</p>
+      )}
+    </div>
 
-      <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-        <button onClick={() => handleTransferAdmin()}>Назначить администратора</button>
-      </div>
+    {/* Форма поиска пользователей */}
+    <div>
+      <form onSubmit={handleSearchUsers}>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Поиск пользователей..."
+        />
+        <button type="submit">Найти</button>
+      </form>
 
-      {/* История сообщений */}
-      <div>
-        {messages.map((msg) => (
+      {/* Результаты поиска */}
+      {foundUsers.length > 0 && (
+        <ul style={{ listStyleType: 'none', padding: 0 }}>
+          {foundUsers.map((user) => (
+            <li key={user.id} style={{ margin: '5px 0' }}>
+              {user.nickname} ({user.email})
+              <button onClick={() => handleAddParticipant(user.id)}>Добавить в чат</button> {/* Строка 30 */}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+    {/* История сообщений */}
+    <div>
+      {messages.length > 0 ? (
+        messages.map((msg) => (
           <div key={msg.id} style={{ marginBottom: '10px' }}>
-            <strong>{msg.sender?.nickname || 'Unknown'}: </strong> 
-            {msg.content} ({msg.createdAt})
+            <strong>{msg.sender?.nickname || 'Unknown'}:</strong> {msg.content} ({msg.createdAt})
 
-            {/* Контекстное меню для пересылки/редактирования/удаления */}
-
+            {/* Контекстное меню для сообщений */}
             <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-              <button onClick={() => handleForward(msg.id)}>
-                Переслать
-              </button>
-
+              <button onClick={() => handleForward(msg.id)}>Переслать</button>
               <button onClick={() => handleEdit(msg.id, prompt('Введите новое сообщение', msg.content))}>
                 Редактировать
               </button>
-
-              <button onClick={() => handleDelete(msg.id)}>
-                Удалить
-              </button>
-
+              <button onClick={() => handleDelete(msg.id)}>Удалить</button>
               <button onClick={() => handleShowForwardedHistory(msg.id)}>
-                Показать историю
+                Показать историю {/* Строка 70 */}
               </button>
-              
-
             </div>
+
+            {/* История пересылок */}
+            {forwardedHistory.length > 0 && (
+              <ul style={{ listStyleType: 'none', padding: 0, marginTop: '5px' }}>
+                {forwardedHistory.map((entry) => (
+                  <li key={entry.id} style={{ color: '#6c757d', fontSize: '0.9em' }}>
+                    Переслано в чат #{entry.forwardedChat.id}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        ))}
-      </div>
-
-      <div>
-
-        <strong>{participant.nickname}</strong>
-        {isAdmin && !participant.isBanned && ( 
-          <button onClick={() => handleBanParticipant(participant.id)}>Забанить</button>
-        )}
-        {isAdmin && participant.isBanned && (
-          <button onClick={() => handleUnbanParticipant(participant.id)}>Разбанить</button>
-        )}
-
-      </div>
-
-      {/* Форма для отправки сообщения */}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Введите сообщение..."
-        />
-        <button type="submit">Отправить</button>
-      </form>
+        ))
+      ) : (
+        <p>Нет сообщений в этом чате.</p>
+      )}
     </div>
-  );
+
+    {/* Форма для отправки сообщения */}
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Введите сообщение..."
+      />
+      <button type="submit">Отправить</button>
+    </form>
+  </div>
+);
 };
 
 export default Chat;

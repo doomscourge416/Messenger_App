@@ -43,13 +43,22 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
+    console.log('Тело запроса для входа:', req.body); // Логирование
+
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Необходимо указать email и password' });
+    }
+
+    // Находим пользователя по email
     const user = await User.findOne({ where: { email } });
+
     if (!user || !(await user.validatePassword(password))) {
       return res.status(401).json({ message: 'Неверный email или пароль' });
     }
 
+    // Генерируем JWT-токен
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, user: { id: user.id } });

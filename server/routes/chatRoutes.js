@@ -26,4 +26,7 @@ router.put('/ban-participant', authMiddleware, chatController.banParticipant);
 // Разбан участника
 router.put('/unban-participant', authMiddleware, chatController.unbanParticipant);
 
+router.get('/search', authMiddleware, chatController.searchUsers);
+router.post('/add-participant', authMiddleware, chatController.addParticipant);
+
 module.exports = router;

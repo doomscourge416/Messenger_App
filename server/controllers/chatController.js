@@ -175,3 +175,54 @@ exports.unbanParticipant = async (req, res) => {
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
+
+exports.searchUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query) {
+      return res.status(400).json({ message: 'Необходимо указать query' });
+    }
+
+    const users = await User.findAll({
+      where: {
+        [Op.or]: [
+          { nickname: { [Op.like]: `%${query}%` } },
+          { email: { [Op.like]: `%${query}%` } },
+        ],
+      },
+      attributes: ['id', 'nickname', 'email'],
+    });
+
+    res.json({ users });
+  } catch (error) {
+    console.error('Ошибка при поиске пользователей:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
+exports.addParticipant = async (req, res) => {
+  try {
+    const { chatId, participantId } = req.body;
+    const userId = req.userId;
+
+    // Находим чат
+    const chat = await Chat.findByPk(chatId);
+    if (!chat) {
+      return res.status(404).json({ message: 'Чат не найден' });
+    }
+
+    // Проверяем права администратора
+    if (chat.adminId !== userId) {
+      return res.status(403).json({ message: 'Вы не являетесь администратором этого чата' });
+    }
+
+    // Добавляем участника
+    await chat.addParticipant(participantId);
+
+    res.json({ message: 'Участник успешно добавлен' });
+  } catch (error) {
+    console.error('Ошибка при добавлении участника:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};

@@ -6,11 +6,12 @@ const initializeWebSocket = require('./websocket');
 const app = express();
 const server = http.createServer(app);
 
+// Middleware для парсинга JSON
+app.use(express.json());
+
 // Middleware для CORS
 app.use(cors({ origin: 'http://localhost:3000 '})); // Разрешаю доступ с клиента
 
-// Middleware для парсинга JSON
-app.use(express.json());
 
 // Подключение маршрутов аутентификации
 const authRoutes = require('./routes/authRoutes');
