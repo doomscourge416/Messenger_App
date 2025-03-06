@@ -1,3 +1,4 @@
+import '../Chat.css';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import WebSocketService from '../services/websocket';
@@ -201,51 +202,39 @@ const Chat = ({ chatId, token }) => {
 
 
   return (
-    <div>
-      <h2>Чат #{chatId}</h2>
-
-      <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-        <button onClick={() => handleMute(chatId)}>Отключить уведомления</button> {/* Строка 40 */}
+    <div className="chat-container">
+      {/* Заголовок чата */}
+      <div className="chat-header">
+        <h2>Чат #{chatId}</h2>
+        <div>
+          <button onClick={() => handleMute(chatId)}>Отключить уведомления</button>
+          <button onClick={() => handleTransferAdmin()}>Назначить администратора</button>
+        </div>
       </div>
-
-      <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-        <button onClick={() => handleTransferAdmin()}>Назначить администратора</button>
-      </div>
-
+  
       {/* История сообщений */}
-      <div>
+      <div className="chat-messages">
         {messages.map((msg) => (
-          <div key={msg.id} style={{ marginBottom: '10px' }}>
-            <strong>{msg.sender?.nickname || 'Unknown'}: </strong> 
-            {msg.content} ({msg.createdAt})
-
+          <div key={msg.id} className="message">
+            <span className="sender">{msg.sender?.nickname || 'Unknown'}</span>
+            <span className="content">{msg.content}</span>
+            <span className="timestamp">{new Date(msg.createdAt).toLocaleString()}</span>
+  
             {/* Контекстное меню для пересылки/редактирования/удаления */}
-
-            <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-              <button onClick={() => handleForward(msg.id)}>
-                Переслать
-              </button>
-
+            <div className="message-actions">
+              <button onClick={() => handleForward(msg.id)}>Переслать</button>
               <button onClick={() => handleEdit(msg.id, prompt('Введите новое сообщение', msg.content))}>
                 Редактировать
               </button>
-
-              <button onClick={() => handleDelete(msg.id)}>
-                Удалить
-              </button>
-
-              <button onClick={() => handleShowForwardedHistory(msg.id)}>
-                Показать историю
-              </button>
-              
-
+              <button onClick={() => handleDelete(msg.id)}>Удалить</button>
+              <button onClick={() => handleShowForwardedHistory(msg.id)}>Показать историю</button>
             </div>
           </div>
         ))}
       </div>
-
+  
       {/* Форма для отправки сообщения */}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="chat-input">
         <input
           type="text"
           value={content}

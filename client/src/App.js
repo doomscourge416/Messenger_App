@@ -1,75 +1,88 @@
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import ChatList from './components/ChatList';
-
 import React, { useState } from 'react';
+import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+
+import Home from './components/Home';
+import Chat from './components/Chat';
+import Header from './components/Header';
 import Login from './components/Login';
-import Register from './components/Register'; 
+import Register from './components/Register';
 import Profile from './components/Profile';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 
 function App() {
-  // const [userId, setUserId] = useState(null);
-  const [token, setToken] = useState(null);
-  const [setUserId] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('messengerToken') || null);
+  const [userId, setUserId] = useState(localStorage.getItem('userId') || null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
 
+  const navigate = useNavigate();
+
   // Обработка входа
-  const handleLogin = (newToken) => {
-
+  const handleLogin = (newToken, newUserId) => {
     setToken(newToken);
-    // setUserId(newUserId);
+    setUserId(newUserId);
     localStorage.setItem('messengerToken', newToken);
-
+    localStorage.setItem('userId', newUserId);
   };
 
   // Обработка выхода
-  const handleLogout = () => {
-    setToken(null);
-    // setUserId(null);
-    localStorage.removeItem('messengerToken');
-    alert('Вы вышли из системы.');
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        '/api/auth/logout',
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      localStorage.removeItem('messengerToken');
+      localStorage.removeItem('userId');
+      setToken(null);
+      setUserId(null);
+
+      alert('Вы успешно вышли из системы.');
+      navigate('/');
+    } catch (error) {
+      console.error('Ошибка при выходе:', error.response?.data || error.message);
+      alert('Не удалось выйти из системы.');
+    }
   };
 
-  const handleRegisterClick = () => setIsRegistering(true);
-  const handleLoginClick = () => setIsRegistering(false);
-
-  const handleForgotPasswordClick = () => setIsForgotPassword(true); 
-  const handleBackClick = () => setIsForgotPassword(false);
-
-  const handleResetPasswordClick = () => setIsResetPassword(true); // Сброс пароля
-  const handleResetBackClick = () => setIsResetPassword(false); 
-
-  
   return (
     <div className="App">
       <h1>Мессенджер</h1>
 
+      <Header token={token} setToken={setToken} setIsRegistering={setIsRegistering} />
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/chat/:chatId" element={<Chat token={token} />} />
+        <Route path="/profile" element={<Profile token={token} />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+      </Routes>
+
       {!token ? (
         isRegistering ? (
-          <Register onBack={handleLoginClick} />
+          <Register onBack={() => setIsRegistering(false)} />
         ) : isForgotPassword ? (
-          <ForgotPassword 
-            onBack={handleBackClick} 
-            onReset={handleResetPasswordClick}
-          />
+          <ForgotPassword onBack={() => setIsForgotPassword(false)} />
         ) : isResetPassword ? (
-          <ResetPassword onBack={handleResetBackClick} />
+          <ResetPassword onBack={() => setIsResetPassword(false)} />
         ) : (
-          <Login 
-            onLogin={handleLogin} 
-            onRegister={handleRegisterClick} 
-            onForgotPassword={handleForgotPasswordClick} 
+          <Login
+            onLogin={handleLogin}
+            onRegister={() => setIsRegistering(true)}
+            onForgotPassword={() => setIsForgotPassword(true)}
           />
         )
       ) : (
         <div>
           <button onClick={handleLogout}>Выйти</button>
-          
-          {/* Отображаем профиль */}
           <Profile token={token} />
         </div>
       )}

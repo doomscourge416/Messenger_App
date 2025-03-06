@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const emailService = require('../services/emailService');
 const { Op } = require('sequelize');
+const db = require('../db');
 
 exports.register = async (req, res) => {
   try {
@@ -56,6 +57,24 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error('Ошибка при входе:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1]; // Получаем токен из заголовка
+
+    if (!token) {
+      return res.status(400).json({ message: 'Токен не предоставлен' });
+    }
+
+    // Добавляем токен в черный список
+    await db.BlacklistedToken.create({ token });
+
+    return res.status(200).json({ message: 'Вы успешно вышли из системы' });
+  } catch (error) {
+    console.error('Ошибка при выходе:', error.message);
+    return res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
 
