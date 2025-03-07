@@ -2,6 +2,14 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const initializeWebSocket = require('./websocket');
+// Подключение маршрутов аутентификации
+const authRoutes = require('./routes/authRoutes');
+// Подключение маршрутов чатов
+const chatRoutes = require('./routes/chatRoutes');
+// Подключение маршрутов сообщений
+const messageRoutes = require('./routes/messageRoutes');
+// Подключение маршрутов нотификаций
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -12,26 +20,25 @@ app.use(cors({ origin: 'http://localhost:3000 '})); // Разрешаю дост
 // Middleware для парсинга JSON
 app.use(express.json());
 
-// Подключение маршрутов аутентификации
-const authRoutes = require('./routes/authRoutes');
+
 app.use('/api/auth', authRoutes);
 
-// Подключение маршрутов чатов
-const chatRoutes = require('./routes/chatRoutes');
+
 app.use('/api/chats', chatRoutes);
 
-// Подключение маршрутов сообщений
-const messageRoutes = require('./routes/messageRoutes');
+
 app.use('/api/messages', messageRoutes);
 
 // Синхронизация моделей с базой данных
 const { sequelize } = require('./db');
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync({ force: true }).then(() => {
   console.log('База данных синхронизирована');
+})
+.catch((error) => {
+  console.error('Ошибка при синхронизации базы данных:', error);
 });
 
-// Подключение маршрутов нотификаций
-const notificationRoutes = require('./routes/notificationRoutes');
+
 app.use('/api/notifications', notificationRoutes); // Строка 30
 
 // Инициализация WebSocket

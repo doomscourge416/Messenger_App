@@ -14,20 +14,18 @@ const ChatList = ({ token }) => {
         const response = await axios.get('/api/chats/list', {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        const chatsWithUnread = response.data.chats.map((chat) => ({
-          ...chat,
-          unreadCount: chat.messages?.filter((msg) => !msg.isRead)?.length || 0, // Строка 45
-        }));
-
-        setChats(chatsWithUnread);
+  
+        console.log('Ответ сервера:', response.data);
+        setChats(response.data.chats); // Убедитесь, что данные сохраняются
       } catch (error) {
         console.error('Ошибка при получении чатов:', error.response?.data || error.message);
       }
     };
-
+  
     fetchChats();
   }, [token]);
+  
+  console.log('State chats:', chats);
 
   // Поиск пользователей
   useEffect(() => {
@@ -54,12 +52,12 @@ const ChatList = ({ token }) => {
   // Помечаем сообщения как прочитанные
   useEffect(() => {
     const markMessagesAsRead = async () => {
-      if (!selectedChatId) return; // Строка 80
+      if (!selectedChatId) return;
 
       try {
         await axios.post(
           '/api/messages/mark-as-read',
-          { chatId: selectedChatId }, // Используем selectedChatId
+          { chatId: selectedChatId },
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -70,12 +68,12 @@ const ChatList = ({ token }) => {
     };
 
     markMessagesAsRead();
-  }, [selectedChatId, token]); // Строка 95
+  }, [selectedChatId, token]);
 
   // Автоматический выбор первого чата
   useEffect(() => {
     if (!selectedChatId && chats.length > 0) {
-      setSelectedChatId(chats[0].id); // Строка 76
+      setSelectedChatId(chats[0].id);
     }
   }, [chats, selectedChatId]);
 
@@ -101,36 +99,48 @@ const ChatList = ({ token }) => {
       </div>
 
       {/* Список чатов */}
+      <div>
+      {chats.length > 0 ? (
+        chats.map(chat => <div key={chat.id}>{chat.name}</div>)
+      ) : (
+        <p>Нет чатов</p>
+      )}
+      </div>
       <ul>
-        {chats.map((chat) => (
-          <li
-            key={chat.id}
-            onClick={() => setSelectedChatId(chat.id)} // Выбор чата
-            style={{
-              cursor: 'pointer',
-              padding: '10px',
-              borderBottom: '1px solid #ccc',
-              backgroundColor: selectedChatId === chat.id ? '#ddd' : 'transparent',
-            }}
-          >
-            <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
-            {/* Счетчик непрочитанных сообщений */}
-            {chat.unreadCount > 0 && (
-              <span style={{ color: 'red', marginLeft: '5px' }}>[{chat.unreadCount}]</span>
-            )}
-            <ul>
-              {chat.participants.map((participant) => (
-                <li key={participant.id}>{participant.nickname}</li>
-              ))}
-            </ul>
-          </li>
-        ))}
+        {chats.length > 0 ? (
+          chats.map((chat) => (
+            <li
+              key={chat.id}
+              onClick={() => setSelectedChatId(chat.id)}
+              style={{
+                cursor: 'pointer',
+                padding: '10px',
+                borderBottom: '1px solid #ccc',
+                backgroundColor: selectedChatId === chat.id ? '#ddd' : 'transparent',
+              }}
+            >
+              <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
+              {chat.unreadCount > 0 && (
+                <span style={{ color: 'red', marginLeft: '5px' }}>[{chat.unreadCount}]</span>
+              )}
+              <ul>
+                {chat.participants.map((participant) => (
+                  <li key={participant.id}>{participant.nickname}</li>
+                ))}
+              </ul>
+            </li>
+          ))
+        ) : (
+          <p>Нет доступных чатов</p>
+        )}
       </ul>
 
       {/* Отображение выбранного чата */}
-      {selectedChatId && <Chat chatId={selectedChatId} token={token} />} {/* Строка 90 */}
+      {selectedChatId && <Chat chatId={selectedChatId} token={token} />}
     </div>
   );
 };
+
+console.log('Token:', token);
 
 export default ChatList;

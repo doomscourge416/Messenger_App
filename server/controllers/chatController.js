@@ -50,12 +50,13 @@ exports.getChats = async (req, res) => {
   try {
     const userId = req.userId;
 
-    // Находим все чаты пользователя
+    console.log('Ищем чаты для пользователя:', userId);
+
     const user = await User.findByPk(userId, {
       include: [
         {
           model: Chat,
-          as: 'chats', // Убедитесь, что используется правильный alias
+          as: 'chats',
           include: [
             {
               model: User,
@@ -68,11 +69,11 @@ exports.getChats = async (req, res) => {
     });
 
     if (!user || !user.chats) {
+      console.log('Чаты не найдены для пользователя:', userId);
       return res.status(404).json({ message: 'Чаты не найдены' });
     }
 
     console.log('Загруженные чаты:', user.chats);
-
     res.json({ chats: user.chats });
   } catch (error) {
     console.error('Ошибка при получении чатов:', error);

@@ -11,11 +11,15 @@ router.use((req, res, next) => {
   next();
 });
 
+// Получение списка чатов
+router.get('/list', authMiddleware, chatController.getChats);
+
+// Получение чатов
+router.get('/chats', authMiddleware, chatController.getChats);
+
 // Создание чата
 router.post('/create', authMiddleware, chatController.createChat);
 
-// Получение списка чатов
-router.get('/list', authMiddleware, chatController.getChats);
 
 // Назначение нового администратора
 router.post('/transfer-admin', authMiddleware, chatController.transferAdmin);

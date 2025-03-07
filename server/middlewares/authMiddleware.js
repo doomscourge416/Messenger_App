@@ -3,23 +3,28 @@ const db = require('../db'); // Убедитесь, что путь к db.js п�
 
 // Функция для проверки, находится ли токен в черном списке
 const isTokenBlacklisted = async (token) => {
-  const blacklistedToken = await db.BlacklistedToken.findOne({ where: { token } });
-  return !!blacklistedToken;
+  try {
+    const blacklistedToken = await db.BlacklistedToken.findOne({ where: { token } });
+    return !!blacklistedToken;
+  } catch (error) {
+    console.error('Ошибка при проверке черного списка:', error);
+    return false; // Если произошла ошибка, считаем токен действительным
+  }
 };
 
 module.exports = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return res.status(401).json({ message: 'Необходима авторизация' });
-  }
-
-  const token = authHeader.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ message: 'Токен отсутствует' });
-  }
-
   try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Необходима авторизация' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Токен отсутствует' });
+    }
+
     // Проверяем, находится ли токен в черном списке
     const isBlacklisted = await isTokenBlacklisted(token);
     if (isBlacklisted) {
@@ -32,7 +37,8 @@ module.exports = async (req, res, next) => {
 
     // Передаем управление дальше
     next();
-  } catch (err) {
+  } catch (error) {
+    console.error('Ошибка при проверке токена:', error);
     return res.status(403).json({ message: 'Недействительный токен' });
   }
 };

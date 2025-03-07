@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM('private', 'group'),
         defaultValue: 'private',
       },
-      adminId: { // Строка 10: добавляем adminId
+      adminId: {
         type: DataTypes.INTEGER,
         references: {
           model: 'Users',
@@ -21,6 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'Chat',
+      tableName: 'Chats',
+      freezeTableName: true,
     }
   );
 
@@ -30,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     if (models.User) {
-      Chat.belongsToMany(models.User, { // Строка 15
+      Chat.belongsToMany(models.User, {
         through: 'ChatParticipants',
         as: 'participants',
         foreignKey: 'chatId',

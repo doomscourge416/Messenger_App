@@ -1,7 +1,7 @@
 'use strict';
 const { Model } = require('sequelize');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto'); // Добавьте этот импорт
+const crypto = require('crypto');
 
 function generateVerificationToken() {
   return crypto.randomBytes(20).toString('hex');
@@ -14,50 +14,49 @@ module.exports = (sequelize, DataTypes) => {
     {
       email: {
         type: DataTypes.STRING,
-        unique: true,
         allowNull: false,
+        unique: true,
         validate: {
           isEmail: true,
         },
       },
-
       nickname: {
         type: DataTypes.STRING,
+        allowNull: false,
         unique: true,
       },
-
       password: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-
       avatarUrl: {
         type: DataTypes.STRING,
       },
-
       isEmailVisible: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
-
       verificationToken: {
         type: DataTypes.STRING,
       },
-
       resetCode: {
         type: DataTypes.STRING,
       },
-
       resetCodeExpires: {
         type: DataTypes.DATE,
       },
-      
     },
     {
       sequelize,
       modelName: 'User',
-      tableName: 'Users', // Укажите явное имя таблицы
-      freezeTableName: true, // Запретить автоматическое множественное число
+      tableName: 'Users',
+      freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['email', 'nickname'], // Составной уникальный индекс
+        },
+      ],
     }
   );
 
@@ -65,7 +64,7 @@ module.exports = (sequelize, DataTypes) => {
     if (models.Message) {
       User.hasMany(models.Message, { foreignKey: 'senderId', as: 'messages' });
     }
-  
+
     if (models.Contact) {
       User.belongsToMany(models.User, {
         through: models.Contact,
@@ -74,7 +73,7 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'contactId',
       });
     }
-  
+
     if (models.Chat) {
       User.belongsToMany(models.Chat, {
         through: 'ChatParticipants',
