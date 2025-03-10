@@ -1,4 +1,3 @@
-// models/BlacklistedToken.js
 module.exports = (sequelize, DataTypes) => {
   const BlacklistedToken = sequelize.define(
     'BlacklistedToken',
@@ -11,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
       token: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: false, // Убираем уникальность
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'BlacklistedTokens', // Убедитесь, что имя таблицы соответствует вашей базе данных
+      tableName: 'BlacklistedTokens',
       timestamps: true,
     }
   );

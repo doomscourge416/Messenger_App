@@ -51,12 +51,7 @@ module.exports = (sequelize, DataTypes) => {
       modelName: 'User',
       tableName: 'Users',
       freezeTableName: true,
-      indexes: [
-        {
-          unique: true,
-          fields: ['email', 'nickname'], // Составной уникальный индекс
-        },
-      ],
+      indexes: [],
     }
   );
 

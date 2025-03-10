@@ -40,11 +40,11 @@ module.exports = {
       },
     });
 
-    // Добавляем составной уникальный индекс
-    await queryInterface.addIndex('NotificationSettings', ['userId', 'chatId'], {
-      unique: true,
-      name: 'unique_user_chat',
-    });
+    // Убираем уникальный индекс
+    // await queryInterface.addIndex('NotificationSettings', ['userId', 'chatId'], {
+    //   unique: true,
+    //   name: 'unique_user_chat',
+    // });
   },
 
   down: async (queryInterface, Sequelize) => {

@@ -142,22 +142,6 @@ const Chat = ({ chatId, token }) => {
     }
   };
 
-
-  const handleUnbanParticipant = async (participantId) => {
-    try {
-      await axios.put(
-        '/api/chats/unban-participant',
-        { chatId, participantId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert('Участник успешно разбанен!');
-      fetchParticipants(); // Обновляем список участников
-    } catch (error) {
-      console.error('Ошибка при разбане участника:', error.response?.data || error.message);
-      alert('Не удалось разбанить участника.');
-    }
-  };
-
   return (
     <div>
       <h2>Чат #{chatId}</h2>

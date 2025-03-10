@@ -7,39 +7,34 @@ module.exports = (sequelize, DataTypes) => {
     {
       userId: {
         type: DataTypes.INTEGER,
-        allowNull: false, // Поле не может быть NULL
+        allowNull: false,
         references: {
-          model: 'Users', // Ссылается на таблицу Users
+          model: 'Users',
           key: 'id',
         },
-        onDelete: 'CASCADE', // При удалении пользователя удаляются его настройки
+        onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },
       chatId: {
         type: DataTypes.INTEGER,
-        allowNull: false, // Поле не может быть NULL
+        allowNull: false,
         references: {
-          model: 'Chats', // Ссылается на таблицу Chats
+          model: 'Chats',
           key: 'id',
         },
-        onDelete: 'CASCADE', // При удалении чата удаляются связанные настройки
+        onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },
       isMuted: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false, // По умолчанию уведомления включены
+        defaultValue: false,
       },
     },
     {
       sequelize,
       modelName: 'NotificationSettings',
-      tableName: 'NotificationSettings', // Явное имя таблицы
-      indexes: [
-        {
-          unique: true,
-          fields: ['userId', 'chatId'], // Составной уникальный индекс
-        },
-      ],
+      tableName: 'NotificationSettings',
+      indexes: [], // Убираем уникальные индексы
     }
   );
 

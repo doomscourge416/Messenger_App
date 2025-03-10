@@ -31,7 +31,7 @@ app.use('/api/messages', messageRoutes);
 
 // Синхронизация моделей с базой данных
 const { sequelize } = require('./db');
-sequelize.sync({ force: true }).then(() => {
+sequelize.sync({ alter: true }).then(() => {
   console.log('База данных синхронизирована');
 })
 .catch((error) => {
