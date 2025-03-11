@@ -1,90 +1,56 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const Login = ({ onLogin, onRegister, onForgotPassword }) => {
+const Login = ({ setToken }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('/api/auth/login', { email, password });
+      const token = response.data.token;
 
-    // Обработка отправки формы 
-    const handleSubmit = async (e) => {
+      // Устанавливаем токен в localStorage и состояние
+      localStorage.setItem('messengerToken', token);
+      setToken(token);
 
-        e.preventDefault();
+      // Перенаправляем на главную страницу
+      navigate('/');
+    } catch (error) {
+      console.error('Ошибка при входе:', error.response?.data || error.message);
+      alert('Не удалось войти.');
+    }
+  };
 
-        try {
-
-            const response = await axios.post(
-                '/api/auth/login',
-                { email, password },
-                {
-                    headers: { 'Content-type': 'application/json' },
-                }
-            );
-
-            const { token, user } = response.data;
-
-            if (token && user ) {
-
-                onLogin(token, user.id); //Передаем токен и ID пользователя в родительский компонент
-                alert('Вы успешно вошли!');
-
-            } else {
-
-                alert('Неверный email или пароль!');
-
-            }
-
-        } catch(error) {
-
-            console.error('Ошибка при входе:', error.response?.data || error.message );
-            alert('Не удалось войти. Проверьте данные.');
-
-        }
-
-    };
-
-    return (
-
+  return (
+    <div>
+      <h2>Вход</h2>
+      <form onSubmit={handleSubmit}>
         <div>
-            <h2>Вход</h2>
-            <form onSubmit={ handleSubmit }>
-
-                <div>
-
-                    <label>Email:</label>
-                    <input 
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder='Введите Email'
-                        required
-                    /> 
-                    
-                </div>
-
-                <div>
-
-                    <label>Пароль:</label>
-                    <input
-                        type='password'
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder='Введите пароль'
-                        required
-                    />
-
-                </div>
-
-                <button type='submit'>Войти</button>
-                <button type="button" onClick={onRegister}>Зарегистрироваться</button>
-                <button type="button" onClick={onForgotPassword}>Забыли пароль?</button>
-
-
-            </form>
+          <label>Email:</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-
-    );
-
+        <div>
+          <label>Пароль:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <button type="submit">Войти</button>
+      </form>
+    </div>
+  );
 };
 
 export default Login;

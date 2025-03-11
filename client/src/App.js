@@ -1,39 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ChatList from './components/ChatList';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'; // Импортируем Routes и Route
+import Home from './components/Home';
+import Chat from './components/Chat';
+import Header from './components/Header';
+import Login from './components/Login';
+import Register from './components/Register';
 import Profile from './components/Profile';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
-const App = () => {
-  const [token, setToken] = useState(localStorage.getItem('messengerToken') || null);
-  const [userId, setUserId] = useState(localStorage.getItem('userId') || null);
-
-  useEffect(() => {
-    console.log('Token:', token);
-    console.log('User ID:', userId);
-  }, [token, userId]);
-
-  const handleLogin = (newToken, newUserId) => {
-    localStorage.setItem('messengerToken', newToken);
-    localStorage.setItem('userId', newUserId);
-    setToken(newToken);
-    setUserId(newUserId);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('messengerToken');
-    localStorage.removeItem('userId');
-    setToken(null);
-    setUserId(null);
-  };
+function App() {
+  const [token, setToken] = useState(localStorage.getItem('messengerToken'));
 
   return (
-    <Router>
+    <>
+      <Header token={token} setToken={setToken} />
       <Routes>
-        <Route path="/" element={<ChatList token={token} />} />
-        <Route path="/profile" element={<Profile token={token} onLogout={handleLogout} />} />
+        <Route path="/" element={<Home token={token} />} />
+        <Route path="/login" element={<Login setToken={setToken} />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/profile" element={<Profile token={token} />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
-    </Router>
+    </>
   );
-};
+}
 
 export default App;

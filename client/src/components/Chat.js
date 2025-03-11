@@ -10,6 +10,31 @@ const Chat = ({ chatId, token }) => {
   const [isMuted, setIsMuted] = useState(false); // Состояние для мутинга чата
   const [forwardedHistory, setForwardedHistory] = useState([]); // Состояние для истории пересылок
 
+    // Определение функции fetchParticipants
+    const fetchParticipants = async () => {
+      try {
+        const response = await axios.get(`/api/chats/participants/${chatId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        if (response.data.participants) {
+          setParticipants(response.data.participants);
+        } else {
+          console.warn('Сервер не вернул список участников:', response.data);
+          alert('Не удалось загрузить участников чата.');
+        }
+  
+        // Проверяем, является ли текущий пользователь администратором
+        const chatResponse = await axios.get(`/api/chats/${chatId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIsAdmin(chatResponse.data.chat.adminId === parseInt(localStorage.getItem('userId'), 10));
+      } catch (error) {
+        console.error('Ошибка при получении участников чата:', error.response?.data || error.message);
+        alert('Не удалось получить список участников.');
+      }
+    };
+
   useEffect(() => {
     if (!chatId) return;
 
@@ -34,7 +59,7 @@ const Chat = ({ chatId, token }) => {
       websocket.disconnect();
     };
   }, [chatId]);
-
+  
   // Получение настроек уведомлений
   useEffect(() => {
     const fetchNotificationSettings = async () => {
