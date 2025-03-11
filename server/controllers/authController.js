@@ -156,7 +156,6 @@ exports.changePassword = async (req, res) => {
 // };
 
 exports.generateResetCode = async (req, res) => {
-
   try {
     const { email } = req.body;
 
@@ -164,25 +163,22 @@ exports.generateResetCode = async (req, res) => {
       return res.status(400).json({ message: 'Необходимо указать email' });
     }
 
-    // Находим пользователя
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(404).json({ message: 'Пользователь с таким email не найден' });
     }
 
     // Генерируем код восстановления
-    const resetCode = crypto.randomBytes(4).toString('hex').toUpperCase(); // 4-символьный код
+    const resetCode = Math.random().toString(36).substring(2, 8).toUpperCase(); // 6-символьный код
     user.resetCode = resetCode;
     user.resetCodeExpires = Date.now() + 3600000; // Код действителен 1 час
     await user.save();
 
-    // Возвращаем код пользователю (можно показать на экране)
-    res.json({ message: 'Код восстановления успешно сгенерирован', resetCode });
+    res.json({ message: 'Код восстановления отправлен', resetCode });
   } catch (error) {
     console.error('Ошибка при генерации кода:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
-
 };
 
 exports.verifyResetCode = async (req,res) => {
@@ -228,44 +224,41 @@ exports.verifyResetCode = async (req,res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-
   try {
+    const { resetCode, newPassword } = req.body;
 
-    const { token, newPassword } = req.body;
-
-    if(!token || !newPassword) {
-      return res.status(400).json({ message: 'Необходимо указать token и newPassword' }); 
+    // Проверяем входные данные
+    if (!resetCode || !newPassword) {
+      return res.status(400).json({ message: 'Необходимо указать код восстановления и новый пароль' });
     }
 
     if (newPassword.length < 6) {
       return res.status(400).json({ message: 'Новый пароль должен быть минимум 6 символов' });
     }
 
-    // Находим пользователя по токену восстановления
+    // Находим пользователя по коду восстановления
     const user = await User.findOne({
       where: {
-        sendResetPasswordToken: token,
-        sendResetPasswordExpires: { [Op.gt]: Date.now() },
+        resetCode,
+        resetCodeExpires: { [Op.gt]: Date.now() }, // Проверяем, что код действителен
       },
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'Токен восстановления недействителен или истек' });
+      return res.status(400).json({ message: 'Неверный или истекший код восстановления' });
     }
 
     // Устанавливаем новый пароль
     await user.setPassword(newPassword);
-    user.resetPasswordToken = null;
-    user.resetPasswordExpires = null;
+
+    // Очищаем код восстановления
+    user.resetCode = null;
+    user.resetCodeExpires = null;
     await user.save();
 
-    res.json({ message: 'Пароль успешно сброшен' });
-
-  } catch(error) {
-
+    res.json({ message: 'Пароль успешно изменен' });
+  } catch (error) {
     console.error('Ошибка при сбросе пароля:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
-
   }
-
 };

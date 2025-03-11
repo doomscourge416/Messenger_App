@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Chat from './Chat';
 
 const ChatList = ({ token }) => {
   const [chats, setChats] = useState([]);
+  const [selectedChatId, setSelectedChatId] = useState(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -28,21 +30,29 @@ const ChatList = ({ token }) => {
     <div>
       <h2>Список чатов</h2>
       <ul>
-        {chats.length > 0 ? (
-          chats.map((chat) => (
-            <li key={chat.id}>
-              <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
-              <ul>
-                {chat.participants.map((participant) => (
-                  <li key={participant.id}>{participant.nickname}</li>
-                ))}
-              </ul>
-            </li>
-          ))
-        ) : (
-          <p>Чатов нет</p>
-        )}
+        {chats.map((chat) => (
+          <li key={chat.id} 
+          onClick={() => setSelectedChatId(chat.id)}
+          style={{
+            cursor: 'pointer',
+            padding: '10px',
+            borderBottom: '1px solid #ccc',
+            backgroundColor: selectedChatId === chat.id ? '#ddd' : 'transparent',
+          }}
+          >
+            <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
+            {chat.name || `Чат #${chat.id}`}
+            <ul>
+              {chat.participants.map((participant) => (
+                <li key={participant.id}>{participant.nickname}</li>
+              ))}
+            </ul>
+          </li>
+        ))}
       </ul>
+
+      {/* Отображение выбранного чата */}
+      {selectedChatId && <Chat chatId={selectedChatId} token={token} />}
     </div>
   );
 };

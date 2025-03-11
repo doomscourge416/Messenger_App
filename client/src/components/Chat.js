@@ -83,13 +83,15 @@ const Chat = ({ chatId, token }) => {
         const response = await axios.get(`/api/messages/chat/${chatId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setMessages(response.data.messages);
+        setMessages(response.data.messages); // Устанавливаем сообщения в состояние
       } catch (error) {
         console.error('Ошибка при получении сообщений:', error.response?.data || error.message);
       }
     };
 
-    fetchMessages();
+    if (chatId) {
+      fetchMessages();
+    }
   }, [chatId, token]);
 
   // Отправка сообщения через API
@@ -200,16 +202,18 @@ const Chat = ({ chatId, token }) => {
 
       {/* Список сообщений */}
       <ul>
-        {messages.map((message) => (
-          <li key={message.id}>
-            {message.content}
-            <button onClick={() => handleEdit(message.id, prompt('Введите новое сообщение:'))}>
-              Редактировать
-            </button>
-            <button onClick={() => handleDelete(message.id)}>Удалить</button>
-            <button onClick={() => handleForward(message.id)}>Переслать</button>
-          </li>
-        ))}
+        {messages.length > 0 ? (
+          messages.map((message) => (
+            <li key={message.id}>
+              <strong>{message.sender.nickname}:</strong> {message.content}
+              <button onClick={() => handleEdit(message.id, prompt('Введите новое сообщение:'))}>Редактировать</button>
+              <button onClick={() => handleDelete(message.id)}>Удалить</button>
+              <button onClick={() => handleForward(message.id)}>Переслать</button>
+            </li>
+          ))
+        ) : (
+          <p>Нет сообщений.</p>
+        )}
       </ul>
 
       {/* Участники чата */}
