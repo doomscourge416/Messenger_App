@@ -5,9 +5,12 @@ import Chat from './Chat';
 const ChatList = ({ token }) => {
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
+  const setMessages = useState('');
 
   useEffect(() => {
-    const fetchChats = async () => {
+    const fetchMessages = async () => {
+      if (!selectedChatId) return;
+  
       try {
         console.log('Начинаю запрос к /api/chats/list');
         const response = await axios.get('/api/chats/list', {
@@ -15,16 +18,31 @@ const ChatList = ({ token }) => {
         });
 
         console.log('Ответ сервера:', response.data);
+        console.log('State chats до обновления:', chats);
+        console.log('Сообщения:', response.data.messages);
+
+        // Убедитесь, что данные корректны
+        if (!Array.isArray(response.data.chats)) {
+          console.error('Ошибка: Поле "chats" должно быть массивом.');
+          return;
+        }
+
+        setMessages(response.data.messages); // Устанавливаем сообщения в состояние
         setChats(response.data.chats);
       } catch (error) {
-        console.error('Ошибка при получении чатов:', error.response?.data || error.message);
+        console.error('Ошибка при получении сообщений:', error.response?.data || error.message);
       }
     };
+  
+    fetchMessages();
+  }, [selectedChatId, token]);
 
-    fetchChats();
-  }, [token]);
+  console.log('State chats:', chats); // Лог состояния чатов
+  useEffect(() => {
+    console.log('State chats обновлен:', chats);
+  }, [chats]);
 
-  console.log('State chats:', chats);
+
 
   return (
     <div>
@@ -56,5 +74,7 @@ const ChatList = ({ token }) => {
     </div>
   );
 };
+
+
 
 export default ChatList;

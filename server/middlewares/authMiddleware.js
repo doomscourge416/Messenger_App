@@ -15,6 +15,7 @@ const isTokenBlacklisted = async (token) => {
 module.exports = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+    console.log('Заголовок Authorization:', req.headers.authorization);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Необходима авторизация' });
@@ -33,6 +34,8 @@ module.exports = async (req, res, next) => {
 
     // Проверяем и декодируем токен
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Декодированный токен:', decoded); // Лог декодированного токена
+
     req.userId = decoded.userId;
 
     // Передаем управление дальше

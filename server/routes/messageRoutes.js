@@ -7,7 +7,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 router.post('/send', authMiddleware, messageController.sendMessage);
 
 // Получение сообщений по ID чата
-router.get('/chat/:chatId', authMiddleware, messageController.getMessagesByChat);
+router.get(`/chat/:chatId`, authMiddleware, messageController.getMessagesByChat);
 
 // Пометка сообщений как прочитанных
 router.post('/mark-as-read', authMiddleware, messageController.markAsRead);

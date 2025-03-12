@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const Login = ({ setToken }) => {
+const Login = ({ setToken, setUserId }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -11,15 +11,20 @@ const Login = ({ setToken }) => {
     e.preventDefault();
     try {
       const response = await axios.post('/api/auth/login', { email, password });
-      const token = response.data.token;
+      const { token, user } = response.data;
 
-      // Устанавливаем токен в localStorage и состояние
-      localStorage.setItem('messengerToken', token);
-      setToken(token);
+    // Сохраняем токен и ID пользователя в localStorage
+    localStorage.setItem('messengerToken', token);
+    localStorage.setItem('userId', user.id);
+
+    // Обновляем состояние приложения
+    setToken(token);
+    setUserId(user.id);
 
       // Перенаправляем на главную страницу
       navigate('/');
     } catch (error) {
+      console.log('Ошибка при входе:', error.response?.data || error.message);
       console.error('Ошибка при входе:', error.response?.data || error.message);
       alert('Не удалось войти.');
     }

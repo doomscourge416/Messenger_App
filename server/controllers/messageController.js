@@ -64,7 +64,6 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-// Получение сообщений по ID чата
 exports.getMessagesByChat = async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -88,6 +87,7 @@ exports.getMessagesByChat = async (req, res) => {
       order: [['createdAt', 'ASC']], // Сортируем сообщения по времени
     });
 
+    console.log('Загруженные сообщения:', messages); // Лог загруженных сообщений
     res.json({ messages });
   } catch (error) {
     console.error('Ошибка при получении сообщений:', error);

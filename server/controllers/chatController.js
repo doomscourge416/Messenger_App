@@ -49,7 +49,6 @@ exports.createChat = async (req, res) => {
 exports.getChats = async (req, res) => {
   try {
     const userId = req.userId;
-
     console.log('Ищем чаты для пользователя:', userId);
 
     const user = await User.findByPk(userId, {

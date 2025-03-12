@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from "react-router-dom";
 import axios from 'axios';
 import WebSocketService from '../services/websocket';
 
-const Chat = ({ chatId, token }) => {
+const Chat = () => {
+  const { chatId } = useParams();
+  const token = localStorage.getItem('messengerToken');
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
   const [participants, setParticipants] = useState([]); // Состояние для участников чата
@@ -80,9 +83,11 @@ const Chat = ({ chatId, token }) => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        console.log('Загружаю сообщения для чата:', chatId);
         const response = await axios.get(`/api/messages/chat/${chatId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('Сообщения:', response.data.messages);
         setMessages(response.data.messages); // Устанавливаем сообщения в состояние
       } catch (error) {
         console.error('Ошибка при получении сообщений:', error.response?.data || error.message);

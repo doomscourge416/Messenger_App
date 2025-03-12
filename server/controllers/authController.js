@@ -55,7 +55,7 @@ exports.login = async (req, res) => {
 
     res.json({ token, user: { id: user.id } });
   } catch (error) {
-    console.error('Ошибка при входе:', error);
+    console.error('Ошибка при входе:', error.response?.data || error.message);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };

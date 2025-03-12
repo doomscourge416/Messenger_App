@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'; // Импортируем Routes и Route
 import Home from './components/Home';
 import Chat from './components/Chat';
+import ChatList from './components/ChatList';
 import Header from './components/Header';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -11,18 +12,33 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('messengerToken'));
+  const [token, setToken] = useState(localStorage.getItem('messengerToken') || null);
+  const [userId, setUserId] = useState(localStorage.getItem('userId') || null);
+
+  // Добавляем токен в заголовки всех запросов
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  }, [token]);
+
+  useEffect(() => {
+    console.log('Token:', token); // Лог токена
+  }, [token]);
 
   return (
     <>
       <Header token={token} setToken={setToken} />
       <Routes>
         <Route path="/" element={<Home token={token} />} />
-        <Route path="/login" element={<Login setToken={setToken} />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login setToken={setToken} setUserId={setUserId} />} />        <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile token={token} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/" element={<ChatList />} />
+        <Route path="/chat/:chatId" element={<Chat />} />
       </Routes>
     </>
   );
