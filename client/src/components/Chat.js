@@ -8,10 +8,27 @@ const Chat = () => {
   const token = localStorage.getItem('messengerToken');
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [foundUsers, setFoundUsers] = useState([]);
   const [participants, setParticipants] = useState([]); // Состояние для участников чата
   const [isAdmin, setIsAdmin] = useState(false); // Состояние для прав администратора
   const [isMuted, setIsMuted] = useState(false); // Состояние для мутинга чата
-  const [forwardedHistory, setForwardedHistory] = useState([]); // Состояние для истории пересылок
+  // const [forwardedHistory, setForwardedHistory] = useState([]); // Состояние для истории пересылок
+
+      // Поиск пользователей
+    const handleSearchUsers = async (e) => {
+      e.preventDefault();
+      try {
+        const response = await axios.get(`/api/user/search?query=${searchQuery}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setFoundUsers(response.data.users);
+      } catch (error) {
+        console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
+        alert('Не удалось найти пользователей.');
+      }
+    };
+
 
     // Определение функции fetchParticipants
     const fetchParticipants = async () => {
@@ -127,6 +144,7 @@ const Chat = () => {
       );
     } catch (error) {
       console.error('Ошибка при редактировании сообщения:', error.response?.data || error.message);
+      alert('Не удалось отредактировать сообщение.');
     }
   };
 
@@ -156,6 +174,7 @@ const Chat = () => {
       alert('Сообщение успешно переслано!');
     } catch (error) {
       console.error('Ошибка при пересылке сообщения:', error.response?.data || error.message);
+      alert('Не удалось переслать сообщение.');
     }
   };
 
@@ -193,6 +212,30 @@ const Chat = () => {
   return (
     <div>
       <h2>Чат #{chatId}</h2>
+
+      {/* Форма поиска */}
+      <form onSubmit={handleSearchUsers}>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Поиск пользователей..."
+        />
+        <button type="submit">Найти</button>
+      </form>
+
+
+      {/* Результаты поиска */}
+      {foundUsers.length > 0 && (
+        <ul>
+          {foundUsers.map((user) => (
+            <li key={user.id}>
+              {user.nickname} ({user.email})
+            </li>
+          ))}
+        </ul>
+      )}
+
 
       {/* Форма отправки сообщений */}
       <form onSubmit={handleSubmit}>

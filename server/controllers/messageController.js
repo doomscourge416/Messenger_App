@@ -148,21 +148,24 @@ exports.editMessage = async (req, res) => {
     // Отправляем обновленное сообщение через WebSocket
     const io = req.app.get('io');
     if (io) {
-      io.clients.forEach((client) => {
-        if (client.chatId === message.chatId.toString()) {
-          client.send(
-            JSON.stringify({
-              type: 'editMessage',
-              id: message.id,
-              content: newContent,
-              senderId: userId,
-              chatId: message.chatId,
-              createdAt: message.createdAt.toLocaleString(),
-            })
-          );
-        }
-      });
+      io.to(message.chatId).emit('editMessage', { id: message.id, content: newContent });
     }
+    // if (io) {
+    //   io.clients.forEach((client) => {
+    //     if (client.chatId === message.chatId.toString()) {
+    //       client.send(
+    //         JSON.stringify({
+    //           type: 'editMessage',
+    //           id: message.id,
+    //           content: newContent,
+    //           senderId: userId,
+    //           chatId: message.chatId,
+    //           createdAt: message.createdAt.toLocaleString(),
+    //         })
+    //       );
+    //     }
+    //   });
+    // }
 
     res.json({ message: 'Сообщение успешно отредактировано', message });
   } catch (error) {
@@ -218,7 +221,7 @@ exports.deleteMessage = async (req, res) => {
 // Пересылка сообщения
 exports.forwardMessage = async (req, res) => {
   try {
-    const { messageId, recipientId } = req.body;
+    const { messageId, recipientChatId } = req.body;
     const userId = req.userId;
 
     // Находим исходное сообщение
@@ -227,56 +230,26 @@ exports.forwardMessage = async (req, res) => {
       return res.status(404).json({ message: 'Исходное сообщение не найдено' });
     }
 
-    // Проверяем, является ли пользователь автором сообщения
+    // Проверяем права пользователя
     if (originalMessage.senderId !== userId) {
       return res.status(403).json({ message: 'Вы не являетесь автором этого сообщения' });
     }
 
-    // Находим чат получателя
-    const recipientChat = await Chat.findByPk(recipientId);
-    if (!recipientChat) {
-      return res.status(404).json({ message: 'Чат получателя не найден' });
-    }
-
-    // Проверяем, является ли пользователь участником чата получателя
-    const isParticipant = await recipientChat.hasParticipant(userId);
-    if (!isParticipant) {
-      return res.status(403).json({ message: 'Вы не являетесь участником этого чата' });
-    }
-
     // Создаем новое сообщение в чате получателя
-    const newMessage = await Message.create({
-      content: originalMessage.content,
+    const forwardedMessage = await Message.create({
+      chatId: recipientChatId,
       senderId: userId,
-      chatId: recipientChat.id,
-    });
-
-    // Создаем запись о пересылке
-    await ForwardedMessages.create({ // Строка 255
-      originalMessageId: messageId,
-      forwardedChatId: recipientChat.id,
+      content: originalMessage.content,
+      isForwarded: true,
     });
 
     // Отправляем событие через WebSocket
     const io = req.app.get('io');
     if (io) {
-      io.clients.forEach((client) => {
-        if (client.chatId === recipientChat.id.toString()) {
-          client.send(
-            JSON.stringify({
-              type: 'newMessage',
-              id: newMessage.id,
-              content: newMessage.content,
-              senderId: userId,
-              chatId: recipientChat.id,
-              createdAt: newMessage.createdAt.toLocaleString(),
-            })
-          );
-        }
-      });
+      io.to(recipientChatId).emit('newMessage', forwardedMessage);
     }
 
-    res.json({ message: 'Сообщение успешно переслано', newMessage });
+    res.json({ message: 'Сообщение успешно переслано' });
   } catch (error) {
     console.error('Ошибка при пересылке сообщения:', error);
     res.status(500).json({ message: 'Ошибка сервера' });

@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const { User } = require('../db');
 
 // обновление никнейма
@@ -75,8 +76,6 @@ exports.toggleEmailVisibility = async (req, res) => {
 
 };
 
-
-
 exports.searchUsers = async (req, res) => {
     try {
         const { query } = req.query;
@@ -100,4 +99,3 @@ exports.searchUsers = async (req, res) => {
         res.status(500).json({ message: 'Ошибка сервера' });
     }
 };
-
