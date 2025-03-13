@@ -22,7 +22,7 @@ module.exports = (server, app) => {
     ws.on('message', (message) => {
       console.log(`Получено сообщение от клиента: ${message}`);
       wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN && client.chatId === chatId) {
+        if (client.readyState === 1 && client.chatId === chatId) {
           client.send(message);
         }
       });

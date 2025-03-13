@@ -14,6 +14,9 @@ import ResetPassword from './components/ResetPassword';
 function App() {
   const [token, setToken] = useState(localStorage.getItem('messengerToken') || null);
   const [userId, setUserId] = useState(localStorage.getItem('userId') || null);
+  const [chatId, setChatId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  
 
   // Добавляем токен в заголовки всех запросов
   useEffect(() => {
@@ -27,6 +30,19 @@ function App() {
   useEffect(() => {
     console.log('Token:', token); // Лог токена
   }, [token]);
+
+
+  // Для обработки событий WebSocket
+  useEffect(() => {
+    const socket = new WebSocket(`ws://localhost:5000?chatId=${chatId}`);
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'editMessage') {
+        setMessages((prev) => prev.map(msg => msg.id === data.id ? { ...msg, content: data.content } : msg));
+      }
+    };
+    return () => socket.close();
+  }, [chatId]);
 
   return (
     <>

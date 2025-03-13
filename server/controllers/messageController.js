@@ -153,7 +153,18 @@ exports.editMessage = async (req, res) => {
     // Отправляем событие через WebSocket
     const io = req.app.get('io');
     if (io) {
-      io.to(message.chatId).emit('editMessage', { id: message.id, content });
+      io.clients.forEach((client) => {
+        if (client.readyState === 1 && client.chatId === message.chatId.toString()) {
+          client.send(JSON.stringify({
+            type: 'editMessage',
+            id: message.id,
+            content: content,
+            senderId: userId,
+            chatId: message.chatId,
+            createdAt: message.createdAt.toISOString(),
+          }));
+        }
+      });
     }
 
     res.json({ message: 'Сообщение успешно отредактировано' });
