@@ -134,11 +134,20 @@ const Chat = () => {
   // Редактирование сообщения
   const handleEdit = async (messageId, newContent) => {
     try {
+
+      console.log('Содержимое отредактированного сообщения: ',newContent);
+
+      if (!newContent || newContent.trim() === '') {
+        alert('Содержимое сообщения не может быть пустым.');
+        return;
+      }
+
       await axios.put(
         `/api/messages/edit/${messageId}`,
         { content: newContent },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
       setMessages((prevMessages) =>
         prevMessages.map((msg) => (msg.id === messageId ? { ...msg, content: newContent } : msg))
       );

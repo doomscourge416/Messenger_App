@@ -127,7 +127,7 @@ exports.markAsRead = async (req, res) => {
 exports.editMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
-    const { newContent } = req.body;
+    const { content } = req.body; // Извлекаем новое содержимое из тела запроса
     const userId = req.userId;
 
     // Находим сообщение
@@ -136,38 +136,27 @@ exports.editMessage = async (req, res) => {
       return res.status(404).json({ message: 'Сообщение не найдено' });
     }
 
-    // Проверяем, является ли пользователь автором сообщения
+    // Проверяем права пользователя
     if (message.senderId !== userId) {
       return res.status(403).json({ message: 'Вы не являетесь автором этого сообщения' });
     }
 
-    // Обновляем содержимое + сохраняем в БД
-    message.content = newContent;
+    // Проверяем, что содержимое не пустое
+    if (!content || content.trim() === '') {
+      return res.status(400).json({ message: 'Содержимое сообщения не может быть пустым' });
+    }
+
+    // Обновляем содержимое сообщения
+    message.content = content;
     await message.save();
 
-    // Отправляем обновленное сообщение через WebSocket
+    // Отправляем событие через WebSocket
     const io = req.app.get('io');
     if (io) {
-      io.to(message.chatId).emit('editMessage', { id: message.id, content: newContent });
+      io.to(message.chatId).emit('editMessage', { id: message.id, content });
     }
-    // if (io) {
-    //   io.clients.forEach((client) => {
-    //     if (client.chatId === message.chatId.toString()) {
-    //       client.send(
-    //         JSON.stringify({
-    //           type: 'editMessage',
-    //           id: message.id,
-    //           content: newContent,
-    //           senderId: userId,
-    //           chatId: message.chatId,
-    //           createdAt: message.createdAt.toLocaleString(),
-    //         })
-    //       );
-    //     }
-    //   });
-    // }
 
-    res.json({ message: 'Сообщение успешно отредактировано', message });
+    res.json({ message: 'Сообщение успешно отредактировано' });
   } catch (error) {
     console.error('Ошибка при редактировании сообщения:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
