@@ -63,6 +63,7 @@ const Chat = () => {
 
     // Подключаемся и передаем коллбэк для обработки сообщений
     websocket.connect((data) => {
+      console.log('Получено событие WebSocket:', data);
       if (data.type === 'newMessage') {
         setMessages((prevMessages) => [...prevMessages, data]);
       } else if (data.type === 'editMessage') {
@@ -73,6 +74,10 @@ const Chat = () => {
         setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== data.id));
       }
     });
+
+    // websocket.on('error', (error) => {
+    //   console.error('Ошибка WebSocket:', error);
+    // });
 
     // Очистка WebSocket при размонтировании компонента
     return () => {
@@ -174,12 +179,11 @@ const Chat = () => {
     try {
       const recipientChatId = prompt('Введите ID чата получателя:');
       if (!recipientChatId) return;
-
-      await axios.post(
-        '/api/messages/forward',
-        { messageId, recipientChatId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  
+      await axios.post('/api/messages/forward', { messageId, recipientChatId }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
       alert('Сообщение успешно переслано!');
     } catch (error) {
       console.error('Ошибка при пересылке сообщения:', error.response?.data || error.message);

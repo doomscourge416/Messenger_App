@@ -235,21 +235,49 @@ exports.forwardMessage = async (req, res) => {
       return res.status(403).json({ message: 'Вы не являетесь автором этого сообщения' });
     }
 
+    // Находим чат получателя
+    const recipientChat = await Chat.findByPk(recipientChatId);
+    if (!recipientChat) {
+      return res.status(404).json({ message: 'Чат получателя не найден' });
+    }
+
+    // Проверяем, является ли пользователь участником чата получателя
+    const isParticipant = await recipientChat.hasParticipant(userId);
+    if (!isParticipant) {
+      return res.status(403).json({ message: 'Вы не являетесь участником этого чата' });
+    }
+
     // Создаем новое сообщение в чате получателя
-    const forwardedMessage = await Message.create({
-      chatId: recipientChatId,
-      senderId: userId,
+    const newMessage = await Message.create({
       content: originalMessage.content,
-      isForwarded: true,
+      senderId: userId,
+      chatId: recipientChat.id,
+    });
+
+    // Создаем запись о пересылке
+    await ForwardedMessages.create({
+      originalMessageId: messageId,
+      forwardedChatId: recipientChat.id,
     });
 
     // Отправляем событие через WebSocket
     const io = req.app.get('io');
     if (io) {
-      io.to(recipientChatId).emit('newMessage', forwardedMessage);
+      io.clients.forEach((client) => {
+        if (client.chatId === recipientChat.id.toString()) {
+          client.send(JSON.stringify({
+            type: 'newMessage',
+            id: newMessage.id,
+            content: newMessage.content,
+            senderId: userId,
+            chatId: recipientChat.id,
+            createdAt: newMessage.createdAt.toISOString(),
+          }));
+        }
+      });
     }
 
-    res.json({ message: 'Сообщение успешно переслано' });
+    res.json({ message: 'Сообщение успешно переслано', newMessage });
   } catch (error) {
     console.error('Ошибка при пересылке сообщения:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
@@ -262,7 +290,7 @@ exports.getForwardedMessages = async (req, res) => {
     const { messageId } = req.params;
 
     // Находим историю пересылок для сообщения
-    const forwardedHistory = await ForwardedMessages.findAll({ // Строка 292
+    const forwardedHistory = await ForwardedMessages.findAll({
       where: { originalMessageId: messageId },
       include: [
         {
