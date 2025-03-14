@@ -13,7 +13,9 @@ const Chat = () => {
   const [participants, setParticipants] = useState([]); // Состояние для участников чата
   const [isAdmin, setIsAdmin] = useState(false); // Состояние для прав администратора
   const [isMuted, setIsMuted] = useState(false); // Состояние для мутинга чата
+  const [menuOpen, setMenuOpen] = useState(null); // Состояние для отслеживания открытого меню
   // const [forwardedHistory, setForwardedHistory] = useState([]); // Состояние для истории пересылок
+  
 
       // Поиск пользователей
     const handleSearchUsers = async (e) => {
@@ -26,32 +28,6 @@ const Chat = () => {
       } catch (error) {
         console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
         alert('Не удалось найти пользователей.');
-      }
-    };
-
-
-    // Определение функции fetchParticipants
-    const fetchParticipants = async () => {
-      try {
-        const response = await axios.get(`/api/chats/participants/${chatId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-  
-        if (response.data.participants) {
-          setParticipants(response.data.participants);
-        } else {
-          console.warn('Сервер не вернул список участников:', response.data);
-          alert('Не удалось загрузить участников чата.');
-        }
-  
-        // Проверяем, является ли текущий пользователь администратором
-        const chatResponse = await axios.get(`/api/chats/${chatId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setIsAdmin(chatResponse.data.chat.adminId === parseInt(localStorage.getItem('userId'), 10));
-      } catch (error) {
-        console.error('Ошибка при получении участников чата:', error.response?.data || error.message);
-        alert('Не удалось получить список участников.');
       }
     };
 
@@ -207,6 +183,43 @@ const Chat = () => {
   };
 
 
+  useEffect(() => {
+    if (!chatId) return;
+
+    fetchParticipants();
+    checkAdminStatus();
+  }, [chatId, token]);
+
+  const fetchParticipants = async () => {
+    try {
+      const response = await axios.get(`/api/chats/participants/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data && response.data.participants) {
+        setParticipants(response.data.participants);
+      } else {
+        console.warn('Сервер не вернул список участников:', response.data);
+        alert('Не удалось загрузить участников чата.');
+      }
+    } catch (error) {
+      console.error('Ошибка при получении участников чата:', error.response?.data || error.message);
+      alert('Не удалось получить список участников.');
+    }
+  };
+
+  const checkAdminStatus = async () => {
+    try {
+      const chatResponse = await axios.get(`/api/chats/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setIsAdmin(chatResponse.data.chat.adminId === parseInt(localStorage.getItem('userId'), 10));
+    } catch (error) {
+      console.error('Ошибка при проверке прав администратора:', error.response?.data || error.message);
+    }
+  };
+
   const handleUnbanParticipant = async (participantId) => {
     try {
       await axios.put(
@@ -214,6 +227,7 @@ const Chat = () => {
         { chatId, participantId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       alert('Участник успешно разбанен!');
       fetchParticipants(); // Обновляем список участников
     } catch (error) {
@@ -223,7 +237,7 @@ const Chat = () => {
   };
 
   return (
-    <div>
+    <div className='chat-container'>
       <h2>Чат #{chatId}</h2>
 
       {/* Форма поиска */}
@@ -262,14 +276,47 @@ const Chat = () => {
       </form>
 
       {/* Список сообщений */}
-      <ul>
+      <ul className="message-list">
         {messages.length > 0 ? (
           messages.map((message) => (
-            <li key={message.id}>
+            <li key={message.id} className="message-item" style={{ marginBottom: '10px', position: 'relative' }}>
               <strong>{message.sender.nickname}:</strong> {message.content}
-              <button onClick={() => handleEdit(message.id, prompt('Введите новое сообщение:'))}>Редактировать</button>
-              <button onClick={() => handleDelete(message.id)}>Удалить</button>
-              <button onClick={() => handleForward(message.id)}>Переслать</button>
+
+              {/* Кнопка для открытия меню */}
+              <button
+                onClick={() => setMenuOpen(message.id === menuOpen ? null : message.id)}
+                style={{ marginLeft: '10px' }}
+              >
+                ...
+              </button>
+
+              {/* Меню действий */}
+              {menuOpen === message.id && (
+                <div className="dropdown-menu"
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: '0',
+                    background: '#fff',
+                    border: '1px solid #ccc',
+                    padding: '8px',
+                    zIndex: 10,
+                    minWidth: '150px',
+                  }}
+                >
+                  <button onClick={() => handleEdit(message.id, prompt('Введите новое сообщение:'))}>
+                    Редактировать
+                  </button>
+
+                  <button onClick={() => handleDelete(message.id)}>
+                    Удалить
+                  </button>
+                  
+                  <button onClick={() => handleForward(message.id)}>
+                    Переслать
+                  </button>
+                </div>
+              )}
             </li>
           ))
         ) : (
