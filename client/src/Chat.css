@@ -4,7 +4,7 @@
   flex-direction: column;
   max-width: 800px;
   margin: 20px auto;
-  padding: 20px;
+  padding: 3%;
   background-color: var(--primary-color);
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -114,4 +114,12 @@
 
 .search-form button:hover {
   background-color: #b8860b; /* Темный оттенок золота */
+}
+
+.notification-container {
+  display: flex;
+}
+
+.notification-container button {
+  margin-left: auto;
 }

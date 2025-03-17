@@ -322,28 +322,11 @@ const Chat = () => {
       <h2>Чат #{chatId}</h2>
       </div>
 
-      {/* Форма поиска */}
-      <form onSubmit={handleSearchUsers} className="search-form">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Поиск пользователей..."
-        />
-        <button type="submit">Найти</button>
-      </form>
 
-
-      {/* Результаты поиска */}
-      {foundUsers.length > 0 && (
-        <ul>
-          {foundUsers.map((user) => (
-            <li key={user.id}>
-              {user.nickname} ({user.email})
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Кнопки управления чатом */}
+      <div className="notification-container">
+        <button onClick={handleMute}>{isMuted ? 'Включить уведомления' : 'Отключить уведомления'}</button>
+      </div>
 
 
       {/* Список сообщений */}
@@ -384,6 +367,18 @@ const Chat = () => {
       </ul>
 
 
+      {/* Форма отправки сообщений */}
+      <form onSubmit={handleSubmit} className="input-form">
+        <input
+          type="text"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Введите сообщение..."
+        />
+        <button type="submit">Отправить</button>
+      </form>
+
+
       {/* Участники чата */}
       <div className="participants-section">
         <h3>Участники:</h3>
@@ -414,22 +409,30 @@ const Chat = () => {
       </div>
 
 
-      {/* Форма отправки сообщений */}
-      <form onSubmit={handleSubmit} className="input-form">
+            {/* Форма поиска */}
+            <form onSubmit={handleSearchUsers} className="search-form">
         <input
           type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Введите сообщение..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Поиск пользователей..."
         />
-        <button type="submit">Отправить</button>
+        <button type="submit">Найти</button>
       </form>
 
-            
-      {/* Кнопки управления чатом */}
-      <div>
-        <button onClick={handleMute}>{isMuted ? 'Включить уведомления' : 'Отключить уведомления'}</button>
-      </div>
+
+      {/* Результаты поиска */}
+      {foundUsers.length > 0 && (
+        <ul>
+          {foundUsers.map((user) => (
+            <li key={user.id}>
+              {user.nickname} ({user.email})
+            </li>
+          ))}
+        </ul>
+      )}
+
+                 
     </div>
   );
 };
