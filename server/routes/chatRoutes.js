@@ -17,40 +17,25 @@ router.get('/list', authMiddleware, chatController.getChats);
 // Получение чатов
 router.get('/chats', authMiddleware, chatController.getChats);
 
+// Получение списка участников
+router.get('/:chatId/participants', authMiddleware, chatController.getParticipants);
+
 // Создание чата
 router.post('/create', authMiddleware, chatController.createChat);
-
 
 // Назначение нового администратора
 router.post('/transfer-admin', authMiddleware, chatController.transferAdmin);
 
+// Блокировка участника
+router.put('/ban-participant', authMiddleware, chatController.banParticipant);
+
 // Разбан участника
-router.put('/unban-participant', authMiddleware, async (req, res) => {
-  try {
-    const { chatId, participantId } = req.body;
-    const userId = req.userId;
+router.put('/unban-participant', authMiddleware, chatController.unbanParticipant);
 
-    // Находим чат
-    const chat = await Chat.findByPk(chatId);
-    if (!chat) {
-      return res.status(404).json({ message: 'Чат не найден' });
-    }
+// Добавление участника 
+router.post('/add-participant', authMiddleware, chatController.addParticipant);
 
-    // Проверяем права администратора
-    if (chat.adminId !== userId) {
-      return res.status(403).json({ message: 'Вы не являетесь администратором этого чата' });
-    }
-
-    // Разбаниваем участника
-    await chat.update({
-      bannedUsers: sequelize.fn('array_remove', sequelize.col('bannedUsers'), participantId),
-    });
-
-    res.json({ message: 'Участник успешно разбанен' });
-  } catch (error) {
-    console.error('Ошибка при разбане участника:', error);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
+// Удаление участника
+router.delete('remove-participant', authMiddleware, chatController.removeParticipant);
 
 module.exports = router;

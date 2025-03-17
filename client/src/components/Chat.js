@@ -17,19 +17,47 @@ const Chat = () => {
   // const [forwardedHistory, setForwardedHistory] = useState([]); // Состояние для истории пересылок
   
 
-      // Поиск пользователей
-    const handleSearchUsers = async (e) => {
-      e.preventDefault();
-      try {
-        const response = await axios.get(`/api/user/search?query=${searchQuery}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setFoundUsers(response.data.users);
-      } catch (error) {
-        console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
-        alert('Не удалось найти пользователей.');
+
+  const fetchParticipants = async () => {
+    try {
+      // const response = await axios.get(`/api/chats/participants/${chatId}`, {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
+
+      const response = await axios.get(`/api/chats/${chatId}/participants`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log('Ответ сервера от fetchParticipants:', response.data); // Логируем ответ
+
+
+      if (response.data && Array.isArray(response.data.participants)) {
+        setParticipants(response.data.participants);
+      } else {
+        console.warn('Сервер не вернул список участников:', response.data);
+        alert('Не удалось загрузить список участников.');
       }
-    };
+    } catch (error) {
+      console.error('Ошибка при получении участников:', error.response?.data || error.message);
+      alert('Произошла ошибка при загрузке участников.');
+    }
+
+  };
+
+
+  // Поиск пользователей
+  const handleSearchUsers = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.get(`/api/user/search?query=${searchQuery}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setFoundUsers(response.data.users);
+    } catch (error) {
+      console.error('Ошибка при поиске пользователей:', error.response?.data || error.message);
+      alert('Не удалось найти пользователей.');
+    }
+  };
 
   useEffect(() => {
     if (!chatId) return;
@@ -51,11 +79,6 @@ const Chat = () => {
       }
     });
 
-    // websocket.on('error', (error) => {
-    //   console.error('Ошибка WebSocket:', error);
-    // });
-
-    // Очистка WebSocket при размонтировании компонента
     return () => {
       websocket.disconnect();
     };
@@ -77,6 +100,7 @@ const Chat = () => {
     fetchNotificationSettings();
   }, [chatId, token]);
 
+
   // Получение истории сообщений
   useEffect(() => {
     const fetchMessages = async () => {
@@ -96,6 +120,7 @@ const Chat = () => {
       fetchMessages();
     }
   }, [chatId, token]);
+
 
   // Отправка сообщения через API
   const handleSubmit = async (e) => {
@@ -138,6 +163,7 @@ const Chat = () => {
     }
   };
 
+
   // Удаление сообщения
   const handleDelete = async (messageId) => {
     try {
@@ -149,6 +175,7 @@ const Chat = () => {
       console.error('Ошибка при удалении сообщения:', error.response?.data || error.message);
     }
   };
+
 
   // Пересылка сообщений
   const handleForward = async (messageId) => {
@@ -166,6 +193,7 @@ const Chat = () => {
       alert('Не удалось переслать сообщение.');
     }
   };
+
 
   // Мутинг чата
   const handleMute = async () => {
@@ -190,23 +218,6 @@ const Chat = () => {
     checkAdminStatus();
   }, [chatId, token]);
 
-  const fetchParticipants = async () => {
-    try {
-      const response = await axios.get(`/api/chats/participants/${chatId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data && response.data.participants) {
-        setParticipants(response.data.participants);
-      } else {
-        console.warn('Сервер не вернул список участников:', response.data);
-        alert('Не удалось загрузить участников чата.');
-      }
-    } catch (error) {
-      console.error('Ошибка при получении участников чата:', error.response?.data || error.message);
-      alert('Не удалось получить список участников.');
-    }
-  };
 
   const checkAdminStatus = async () => {
     try {
@@ -219,6 +230,7 @@ const Chat = () => {
       console.error('Ошибка при проверке прав администратора:', error.response?.data || error.message);
     }
   };
+
 
   const handleUnbanParticipant = async (participantId) => {
     try {
@@ -235,6 +247,72 @@ const Chat = () => {
       alert('Не удалось разбанить участника.');
     }
   };
+
+
+  const handleTransferAdmin = async () => {
+    try {
+      const newAdminId = prompt('Введите ID нового администратора:');
+      if (!newAdminId) return;
+  
+      await axios.post(
+        '/api/chats/transfer-admin',
+        { chatId, newAdminId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Права администратора успешно переданы!');
+    } catch (error) {
+      console.error('Ошибка при передаче прав администратора:', error.response?.data || error.message);
+      alert('Не удалось передать права администратора.');
+    }
+  };
+
+
+  const handleBanParticipant = async (participantId) => {
+    try {
+      await axios.put(
+        '/api/chats/ban-participant',
+        { chatId, participantId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Участник успешно заблокирован!');
+      fetchParticipants(); // Обновляем список участников
+    } catch (error) {
+      console.error('Ошибка при блокировке участника:', error.response?.data || error.message);
+    }
+  };
+
+
+  const handleAddParticipant = async () => {
+    try {
+      const participantId = prompt('Введите ID участника для добавления:');
+      if (!participantId) return;
+  
+      await axios.post(
+        '/api/chats/add-participant',
+        { chatId, participantId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Участник успешно добавлен!');
+      fetchParticipants(); // Обновляем список участников
+    } catch (error) {
+      console.error('Ошибка при добавлении участника:', error.response?.data || error.message);
+      alert('Не удалось добавить участника.');
+    }
+  };
+
+
+  const handleRemoveParticipant = async (participantId) => {
+    try {
+      await axios.delete(`/api/chats/remove-participant/${participantId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Участник успешно удален!');
+      fetchParticipants(); // Обновляем список участников
+    } catch (error) {
+      console.error('Ошибка при удалении участника:', error.response?.data || error.message);
+    }
+  };
+
 
   return (
     <div className='chat-container'>
@@ -327,18 +405,33 @@ const Chat = () => {
       {/* Участники чата */}
       <div>
         <h3>Участники:</h3>
-        <ul>
-          {participants.map((participant) => (
-            <li key={participant.id}>
-              {participant.nickname}
-              {isAdmin && participant.isBanned && (
-                <button onClick={() => handleUnbanParticipant(participant.id)}>Разбанить</button>
-              )}
-            </li>
-          ))}
-        </ul>
+        {participants.length > 0 ? (
+          <ul>
+            {participants.map((participant) => (
+              <li key={participant.id}>
+                {participant.nickname}
+                {isAdmin && !participant.isBanned && (
+                  <>
+                    <button onClick={() => handleBanParticipant(participant.id)}>Заблокировать</button>
+                    <button onClick={() => handleRemoveParticipant(participant.id)}>Удалить</button>
+                  </>
+                )}
+                {isAdmin && participant.isBanned && (
+                  <button onClick={() => handleUnbanParticipant(participant.id)}>Разбанить</button>
+                )}
+              </li>
+            ))}
+
+            <button onClick={handleAddParticipant}>Добавить участника</button>
+            <button onClick={handleTransferAdmin}>Передать права администратора</button>
+          </ul>
+        ) : (
+          <p>Нет участников в этом чате.</p>
+        )}
+        
       </div>
 
+        
       {/* Кнопки управления чатом */}
       <div>
         <button onClick={handleMute}>{isMuted ? 'Включить уведомления' : 'Отключить уведомления'}</button>
