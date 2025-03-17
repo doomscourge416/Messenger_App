@@ -1,35 +1,39 @@
-/* Сброс стандартных стилей */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* app.css */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--background-color);
 }
 
-html,
-body {
-  height: 100%;
-  font-family: 'Arial', sans-serif;
-  background-color: #f9fafb;
-  color: #1f2937;
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: var(--primary-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Глобальные отступы */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+.navbar a {
+  color: var(--secondary-color);
+  margin-right: 10px;
 }
 
-/* Кнопка выхода */
-.logout-button {
-  background-color: #ef4444;
-  color: white;
+.navbar button {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
   border: none;
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: 5px;
   cursor: pointer;
 }
 
-.logout-button:hover {
-  background-color: #f87171;
+.navbar button:hover {
+  background-color: #b8860b;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
 }

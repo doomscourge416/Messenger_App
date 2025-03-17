@@ -45,18 +45,13 @@ const ChatList = ({ token }) => {
 
 
   return (
-    <div>
+    <main>
       <h2>Список чатов</h2>
-      <ul>
+      <ul className="chat-list">
         {chats.map((chat) => (
           <li key={chat.id} 
           onClick={() => setSelectedChatId(chat.id)}
-          style={{
-            cursor: 'pointer',
-            padding: '10px',
-            borderBottom: '1px solid #ccc',
-            backgroundColor: selectedChatId === chat.id ? '#ddd' : 'transparent',
-          }}
+          className="chat-item"
           >
             <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
             {chat.name || `Чат #${chat.id}`}
@@ -71,7 +66,7 @@ const ChatList = ({ token }) => {
 
       {/* Отображение выбранного чата */}
       {selectedChatId && <Chat chatId={selectedChatId} token={token} />}
-    </div>
+    </main>
   );
 };
 

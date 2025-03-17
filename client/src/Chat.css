@@ -1,129 +1,117 @@
-/* Общие стили */
-body {
-  font-family: 'Arial', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f9fafb;
-  color: #1f2937;
-}
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-nav a {
-  color: #3b82f6;
-  text-decoration: none;
-  margin-right: 10px;
-}
-
-nav a:hover {
-  text-decoration: underline;
-}
-
-button {
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #60a5fa;
-}
-
-/* Основной контент */
+/* chat.css */
 .chat-container {
+  display: flex;
+  flex-direction: column;
   max-width: 800px;
   margin: 20px auto;
   padding: 20px;
-  background-color: #ffffff;
+  background-color: var(--primary-color);
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.chat-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
 .message-list {
   list-style-type: none;
-  padding: 0;
+  margin-bottom: 20px;
 }
 
 .message-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
   padding: 10px;
-  background-color: #f3f4f6;
+  background-color: #3a3a3a;
   border-radius: 5px;
+  margin-bottom: 10px;
+  color: var(--text-color);
 }
 
 .message-item p {
-  margin: 0;
-  word-break: break-word;
+  margin-left: 5%;
 }
 
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.message-item button {
+  margin-left: auto;
+}
+
+.input-form {
+  display: flex;
+  gap: 10px;
+}
+
+.input-form input {
+  flex-grow: 1;
   padding: 10px;
-  z-index: 1000;
-  display: none;
+  border: 1px solid var(--secondary-color);
+  border-radius: 5px;
+  background-color: #3a3a3a;
+  color: var(--text-color);
 }
 
-.message-item:hover .dropdown-menu {
-  display: block;
-}
-
-.dropdown-menu button {
-  display: block;
-  width: 100%;
-  margin-bottom: 5px;
-  padding: 5px;
-  background-color: transparent;
+.input-form button {
+  padding: 10px 15px;
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
   border: none;
-  color: #3b82f6;
+  border-radius: 5px;
   cursor: pointer;
 }
 
-.dropdown-menu button:last-child {
-  margin-bottom: 0;
+.input-form button:hover {
+  background-color: #b8860b;
 }
 
-/* Форма отправки сообщений */
-form {
-  display: flex;
-  gap: 10px;
+.participants-section {
   margin-top: 20px;
 }
 
-input[type="text"] {
-  flex-grow: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+.participants-section h3 {
+  color: var(--secondary-color);
+  margin-bottom: 10px;
 }
 
-button[type="submit"] {
-  padding: 10px 16px;
-  background-color: #3b82f6;
-  color: white;
+.participants-section ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.participants-section li {
+  padding: 5px 0;
+  color: var(--text-color);
+}
+
+.participants-section button {
+  margin-left: 10px;
+}
+
+.search-form {
+  margin-bottom: 20px;
+}
+
+.search-form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d4af37; /* Золотистая граница */
+  border-radius: 5px;
+  background-color: #3a3a3a; /* Темно-серый фон */
+  color: #ffffff; /* Белый текст */
+}
+
+.search-form button {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background-color: #d4af37; /* Золотистая кнопка */
+  color: #2a2a2a; /* Темно-серый текст */
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
 
-button[type="submit"]:hover {
-  background-color: #60a5fa;
+.search-form button:hover {
+  background-color: #b8860b; /* Темный оттенок золота */
 }

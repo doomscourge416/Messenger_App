@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
 import WebSocketService from '../services/websocket';
+import '../Chat.css';
 
 const Chat = () => {
   const { chatId } = useParams();
@@ -316,10 +317,13 @@ const Chat = () => {
 
   return (
     <div className='chat-container'>
+
+      <div className="chat-header">
       <h2>Чат #{chatId}</h2>
+      </div>
 
       {/* Форма поиска */}
-      <form onSubmit={handleSearchUsers}>
+      <form onSubmit={handleSearchUsers} className="search-form">
         <input
           type="text"
           value={searchQuery}
@@ -342,46 +346,23 @@ const Chat = () => {
       )}
 
 
-      {/* Форма отправки сообщений */}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Введите сообщение..."
-        />
-        <button type="submit">Отправить</button>
-      </form>
-
       {/* Список сообщений */}
       <ul className="message-list">
         {messages.length > 0 ? (
           messages.map((message) => (
-            <li key={message.id} className="message-item" style={{ marginBottom: '10px', position: 'relative' }}>
-              <strong>{message.sender.nickname}:</strong> {message.content}
+            <li key={message.id} className="message-item">
+              <strong>{message.sender.nickname} :</strong> <p>{message.content}</p>
 
               {/* Кнопка для открытия меню */}
-              <button
+              <button className="message-actions-button"
                 onClick={() => setMenuOpen(message.id === menuOpen ? null : message.id)}
-                style={{ marginLeft: '10px' }}
               >
                 ...
               </button>
 
               {/* Меню действий */}
               {menuOpen === message.id && (
-                <div className="dropdown-menu"
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: '0',
-                    background: '#fff',
-                    border: '1px solid #ccc',
-                    padding: '8px',
-                    zIndex: 10,
-                    minWidth: '150px',
-                  }}
-                >
+                <div className="message-actions-menu">
                   <button onClick={() => handleEdit(message.id, prompt('Введите новое сообщение:'))}>
                     Редактировать
                   </button>
@@ -402,8 +383,9 @@ const Chat = () => {
         )}
       </ul>
 
+
       {/* Участники чата */}
-      <div>
+      <div className="participants-section">
         <h3>Участники:</h3>
         {participants.length > 0 ? (
           <ul>
@@ -431,7 +413,19 @@ const Chat = () => {
         
       </div>
 
-        
+
+      {/* Форма отправки сообщений */}
+      <form onSubmit={handleSubmit} className="input-form">
+        <input
+          type="text"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Введите сообщение..."
+        />
+        <button type="submit">Отправить</button>
+      </form>
+
+            
       {/* Кнопки управления чатом */}
       <div>
         <button onClick={handleMute}>{isMuted ? 'Включить уведомления' : 'Отключить уведомления'}</button>

@@ -9,7 +9,7 @@ const Header = ({ token, setToken }) => {
   };
 
   return (
-    <header style={{ padding: '10px', background: '#f0f0f0', borderBottom: '1px solid #ccc' }}>
+    <header>
       <nav>
         <Link to="/">Главная</Link> |{' '}
         {!token ? (

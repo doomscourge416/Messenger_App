@@ -193,23 +193,23 @@ exports.unbanParticipant = async (req, res) => {
 exports.addParticipant = async (req, res) => {
   try {
     const { chatId, participantId } = req.body;
-    const currentUserId = req.userId;
+    const parsedChatId = parseInt(chatId, 10);
+    const parsedParticipantId = parseInt(participantId, 10);
+    const userId = req.userId;
 
     // Находим чат
-    const chat = await Chat.findByPk(chatId);
+    const chat = await Chat.findByPk(parsedChatId);
     if (!chat) {
       return res.status(404).json({ message: 'Чат не найден' });
     }
 
     // Проверяем права текущего пользователя
-    if (chat.adminId !== currentUserId) {
+    if (chat.adminId !== parsedChatId) {
       return res.status(403).json({ message: 'Вы не являетесь администратором этого чата' });
     }
 
     // Добавляем участника
-    await chat.update({
-      participants: sequelize.fn('array_append', sequelize.col('participants'), participantId),
-    });
+    await chat.addParticipant(parsedParticipantId);
 
     res.json({ message: 'Участник успешно добавлен в чат' });
   } catch (error) {

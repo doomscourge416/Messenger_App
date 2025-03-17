@@ -10,6 +10,7 @@ import Register from './components/Register';
 import Profile from './components/Profile';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import './global.css';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('messengerToken') || null);
@@ -45,7 +46,7 @@ function App() {
   }, [chatId]);
 
   return (
-    <>
+    <div className="">
       <Header token={token} setToken={setToken} />
       <Routes>
         <Route path="/" element={<Home token={token} />} />
@@ -56,7 +57,7 @@ function App() {
         <Route path="/" element={<ChatList />} />
         <Route path="/chat/:chatId" element={<Chat />} />
       </Routes>
-    </>
+    </div>
   );
 }
 
