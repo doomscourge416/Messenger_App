@@ -1,8 +1,19 @@
 /* index.css */
+
+/* Глобальные стили */
+:root {
+  --primary-color: #2a2a2a; /* Темно-серый фон */
+  --secondary-color: #d4af37; /* Золотистый акцент */
+  --text-color: #ffffff; /* Белый текст */
+  --hover-color: #5a5a5a; /* Цвет при наведении */
+}
+
 body {
   font-family: 'Arial', sans-serif;
-  background-color: #f0f0f0; /* Светло-серый фон */
-  color: #333; /* Темный текст */
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
 }
 
 header {
@@ -10,12 +21,12 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #ffffff; /* Белый фон */
+  background-color: var(--primary-color);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 nav a {
-  color: #3b82f6; /* Ярко-синий */
+  color: var(--secondary-color);
   text-decoration: none;
   margin-right: 10px;
 }
@@ -30,11 +41,93 @@ nav a:hover {
   padding: 0 20px;
 }
 
-.chat-list {
-  list-style-type: none;
-  padding: 0;
+/* Стили для формы входа */
+.login-form {
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #3a3a3a;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.login-form h2 {
+  color: var(--secondary-color);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--secondary-color);
+  border-radius: 5px;
+  background-color: #5a5a5a;
+  color: var(--text-color);
+}
+
+.login-form button {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.login-form button:hover {
+  background-color: #b8860b;
+}
+
+/* Стили для списка чатов */
+.chat-list-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #3a3a3a;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chat-list-header {
+  margin-bottom: 20px;
+  text-align: center;
+  color: var(--secondary-color);
 }
 
 .chat-item {
+  padding: 15px;
+  background-color: #4a4a4a;
+  border-radius: 5px;
   margin-bottom: 10px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.chat-item:hover {
+  background-color: var(--hover-color);
+}
+
+.chat-item strong {
+  margin-right: 5px;
+  color: var(--secondary-color);
+}
+
+.chat-item ul {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 5px;
+}
+
+.chat-item ul li {
+  font-size: 0.9em;
+  color: #ccc;
+}
+
+/* Стили для выбранного чата */
+.selected-chat {
+  border-left: 4px solid var(--secondary-color);
 }

@@ -1,6 +1,25 @@
 const { Op } = require('sequelize');
 const { User } = require('../db');
 
+exports.getProfile = async (req, res) => {
+  try {
+    const userId = req.userId; // ID пользователя из токена
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'nickname', 'email', 'avatarUrl', 'isEmailVisible'],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    console.log('Запрос на получение профиля:', req.userId);
+    res.json({ user });
+  } catch (error) {
+    console.error('Ошибка при получении профиля:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
 // обновление никнейма
 exports.updateNickname = async (req, res) => {
     try {

@@ -31,7 +31,7 @@ const Login = ({ setToken, setUserId }) => {
   };
 
   return (
-    <div>
+    <div className="login-form">
       <h2>Вход</h2>
       <form onSubmit={handleSubmit}>
         <div>

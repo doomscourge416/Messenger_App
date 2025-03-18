@@ -15,6 +15,7 @@ const Chat = () => {
   const [isAdmin, setIsAdmin] = useState(false); // Состояние для прав администратора
   const [isMuted, setIsMuted] = useState(false); // Состояние для мутинга чата
   const [menuOpen, setMenuOpen] = useState(null); // Состояние для отслеживания открытого меню
+  const [expandedMessages, setExpandedMessages] = useState([]); // Состояния для развертывания длинного сообщения
   // const [forwardedHistory, setForwardedHistory] = useState([]); // Состояние для истории пересылок
   
 
@@ -315,6 +316,24 @@ const Chat = () => {
   };
 
 
+  // Функция разворачивания длинных сообщений
+  const toggleExpand = (messageId) => {
+    setExpandedMessages((prev) =>
+      prev.includes(messageId)
+        ? prev.filter((id) => id !== messageId) // Свернуть
+        : [...prev, messageId] // Развернуть
+    );
+  };
+
+  // Устанавливаем максимальную длину никнейма
+  const truncateNickname = (nickname) => {
+    if (nickname.length > 20) { 
+      return `${nickname.substring(0, 20)}...`;
+    }
+    return nickname;
+  };
+
+
   return (
     <div className='chat-container'>
 
@@ -334,7 +353,42 @@ const Chat = () => {
         {messages.length > 0 ? (
           messages.map((message) => (
             <li key={message.id} className="message-item">
-              <strong>{message.sender.nickname} :</strong> <p>{message.content}</p>
+
+            <img
+                src={message.sender.avatarUrl || '/default-avatar.png'}
+                alt={`${message.sender.nickname}'s avatar`}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%', // Круглая форма
+                  objectFit: 'cover', // Обрезка изображения
+                  marginRight: '10px',
+                }}
+              />
+
+              <span className="nickname">{truncateNickname(message.sender.nickname)} : </span>
+
+              <p className={`message-content ${expandedMessages.includes(message.id) ? 'expanded' : ''}`}
+              >
+                {message.content}
+              </p>
+
+              {message.content.length > 100 && !expandedMessages.includes(message.id) && (
+                <button
+                  className="expand-button"
+                  onClick={() => toggleExpand(message.id)}
+                >
+                  Развернуть
+                </button>
+              )}
+              {expandedMessages.includes(message.id) && (
+                <button
+                  className="expand-button"
+                  onClick={() => toggleExpand(message.id)}
+                >
+                  Свернуть
+                </button>
+              )}
 
               {/* Кнопка для открытия меню */}
               <button className="message-actions-button"
@@ -386,7 +440,24 @@ const Chat = () => {
           <ul>
             {participants.map((participant) => (
               <li key={participant.id}>
+
+
+              <img
+                src={participant.avatarUrl || '/default-avatar.png'}
+                alt={`${participant.nickname}'s avatar`}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%', // Круглая форма
+                  objectFit: 'cover', // Обрезка изображения
+                  marginRight: '10px',
+                }}
+              />
+
+
                 {participant.nickname}
+
+
                 {isAdmin && !participant.isBanned && (
                   <>
                     <button onClick={() => handleBanParticipant(participant.id)}>Заблокировать</button>

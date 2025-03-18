@@ -32,22 +32,24 @@ const Home = ({ token }) => {
 
   return (
     <div>
-      <h2>Список чатов</h2>
+      <h1>HOME JS</h1>
+       
+      <div className="home-container">
+        <h1>Добро пожаловать в мессенджер!</h1>
+        <p>Выберите действие:</p>
+        <ul>
+          <li>
+            <Link to="/chats">Перейти к списку чатов</Link>
+          </li>
+          <li>
+            <Link to="/profile">Мой профиль</Link>
+          </li>
+          <li>
+            <Link to="/settings">Настройки</Link>
+          </li>
+        </ul>
+      </div>
 
-      {/* Список чатов */}
-      <ul>
-        {chats.length > 0 ? (
-          chats.map((chat) => (
-            <li key={chat.id}>
-              <Link to={`/chat/${chat.id}`} onClick={() => setSelectedChatId(chat.id)}>
-                {chat.name || `Чат #${chat.id}`}
-              </Link>
-            </li>
-          ))
-        ) : (
-          <p>Нет доступных чатов.</p>
-        )}
-      </ul>
     </div>
   );
 };

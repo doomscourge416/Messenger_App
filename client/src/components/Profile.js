@@ -10,6 +10,8 @@ const Profile = ({ token }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
+  // console.log('Token В PROFILE.JS:', token);
+
   useEffect(() => {
     // Получаем информацию о текущем пользователе
     const fetchUser = async () => {
@@ -19,6 +21,7 @@ const Profile = ({ token }) => {
         });
         setUser(response.data.user);
         setEmailVisibility(response.data.user.isEmailVisible);
+        console.log('response.data.user = ', response.data.user);
       } catch (error) {
         console.error('Ошибка при получении профиля:', error.response?.data || error.message);
       }
@@ -92,6 +95,28 @@ const Profile = ({ token }) => {
   };
 
 
+  // Если токен отсутствует, показываем сообщение
+  if (!token) {
+    return (
+      <div>
+        <h2>Профиль</h2>
+        <p>Чтобы увидеть профиль, вам необходимо войти в систему.</p>
+        <a href="/login">Страница входа</a>
+      </div>
+    );
+  }
+
+  // // Если пользователь еще не загружен, показываем загрузку
+  // if (!user) {
+  //   return (
+  //     <div>
+  //       <h2>Профиль</h2>
+  //       <p>Чтобы увидеть профиль, вам необходимо войти в систему</p>
+  //       <a href="/login">Страница входа</a>
+  //     </div>
+  //   );
+  // }
+
   return (
     <div>
       <h2>Профиль</h2>
@@ -99,12 +124,14 @@ const Profile = ({ token }) => {
       {/* Отображение информации о пользователе */}
       {user && (
         <div>
-          <img src={user.avatarUrl || '/default-avatar.png'} alt="Avatar" style={{ width: '50px', height: '50px' }} />
+          <img src={user.avatarUrl || '../../public/default-avatar.png'} alt="Avatar" style={{ width: '50px', height: '50px' }} />
           <p>Никнейм: {user.nickname}</p>
           <p>Email: {emailVisibility ? user.email : 'Скрыт'}</p>
         </div>
       )}
 
+      <br></br>
+      <br></br>
 
       {/* Изменение аватара */}
       <button onClick={handleUpdateAvatar}>Изменить аватар</button>

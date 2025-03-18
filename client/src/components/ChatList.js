@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import Chat from './Chat';
+import '../index.css';
+import '../Chat.css';
+import '../global.css';
+import '../App.css';
 
 const ChatList = ({ token }) => {
+  const { chatId } = useParams();
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const setMessages = useState('');
 
+
+  // Загрузка списка чатов
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!selectedChatId) return;
-  
+    const fetchChats = async () => {
       try {
         console.log('Начинаю запрос к /api/chats/list');
         const response = await axios.get('/api/chats/list', {
@@ -18,24 +25,15 @@ const ChatList = ({ token }) => {
         });
 
         console.log('Ответ сервера:', response.data);
-        console.log('State chats до обновления:', chats);
-        console.log('Сообщения:', response.data.messages);
-
-        // Убедитесь, что данные корректны
-        if (!Array.isArray(response.data.chats)) {
-          console.error('Ошибка: Поле "chats" должно быть массивом.');
-          return;
-        }
-
-        setMessages(response.data.messages); // Устанавливаем сообщения в состояние
         setChats(response.data.chats);
       } catch (error) {
-        console.error('Ошибка при получении сообщений:', error.response?.data || error.message);
+        console.error('Ошибка при получении чатов:', error.response?.data || error.message);
       }
     };
-  
-    fetchMessages();
-  }, [selectedChatId, token]);
+
+    fetchChats();
+  }, [token]);
+
 
   console.log('State chats:', chats); // Лог состояния чатов
   useEffect(() => {
@@ -43,30 +41,44 @@ const ChatList = ({ token }) => {
   }, [chats]);
 
 
-
   return (
-    <main>
-      <h2>Список чатов</h2>
+    <div className="chat-list-container">
+      <h2 className="chat-list-header">Список чатов</h2>
       <ul className="chat-list">
-        {chats.map((chat) => (
-          <li key={chat.id} 
-          onClick={() => setSelectedChatId(chat.id)}
-          className="chat-item"
-          >
-            <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
-            {chat.name || `Чат #${chat.id}`}
-            <ul>
-              {chat.participants.map((participant) => (
-                <li key={participant.id}>{participant.nickname}</li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+        {chats.length > 0 ? (
+          chats.map((chat) => (
+            <li key={chat.id} className="chat-item">
+              <Link to={`/chat/${chat.id}`}>
+                <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>
+                <span>{chat.name || `Чат #${chat.id}`}</span>
+                <ul>
+                  {chat.participants.map((participant) => (
+                    <li key={participant.id}>
 
-      {/* Отображение выбранного чата */}
-      {selectedChatId && <Chat chatId={selectedChatId} token={token} />}
-    </main>
+                    <img
+                        src={participant.avatarUrl || '/default-avatar.png'}
+                        alt={`${participant.nickname}'s avatar`}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%', // Круглая форма
+                          objectFit: 'cover', // Обрезка изображения
+                          marginRight: '10px',
+                        }}
+                      />
+
+                      {participant.nickname}
+                      </li>
+                  ))}
+                </ul>
+              </Link>
+            </li>
+          ))
+        ) : (
+          <p>Нет доступных чатов.</p>
+        )}
+      </ul>
+    </div>
   );
 };
 

@@ -3,6 +3,9 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
+// Получение профиля пользователя
+router.get('/profile', authMiddleware, userController.getProfile);
+
 // Обновление никнейма
 router.put('/nickname', authMiddleware, userController.updateNickname);
 

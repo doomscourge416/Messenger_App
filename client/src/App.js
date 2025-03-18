@@ -46,7 +46,7 @@ function App() {
   }, [chatId]);
 
   return (
-    <div className="">
+    <div>
       <Header token={token} setToken={setToken} />
       <Routes>
         <Route path="/" element={<Home token={token} />} />
@@ -54,7 +54,7 @@ function App() {
         <Route path="/profile" element={<Profile token={token} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/" element={<ChatList />} />
+        <Route path="/chats" element={<ChatList token={token} />} />
         <Route path="/chat/:chatId" element={<Chat />} />
       </Routes>
     </div>
