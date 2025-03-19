@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
 import WebSocketService from '../services/websocket';
+import { toast } from 'react-toastify';
 import '../Chat.css';
 
 const Chat = () => {
@@ -11,12 +12,15 @@ const Chat = () => {
   const [content, setContent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [foundUsers, setFoundUsers] = useState([]);
-  const [participants, setParticipants] = useState([]); // Состояние для участников чата
-  const [isAdmin, setIsAdmin] = useState(false); // Состояние для прав администратора
-  const [isMuted, setIsMuted] = useState(false); // Состояние для мутинга чата
-  const [menuOpen, setMenuOpen] = useState(null); // Состояние для отслеживания открытого меню
-  const [expandedMessages, setExpandedMessages] = useState([]); // Состояния для развертывания длинного сообщения
-  // const [forwardedHistory, setForwardedHistory] = useState([]); // Состояние для истории пересылок
+  const [participants, setParticipants] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminUser, setAdminUser] = useState(null);
+  const [isAddParticipantModalOpen, setIsAddParticipantModalOpen] = useState(false);
+  const [newParticipantEmail, setNewParticipantEmail] = useState('');
+  const [isMuted, setIsMuted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(null);
+  const [expandedMessages, setExpandedMessages] = useState([]);
+  // const [forwardedHistory, setForwardedHistory] = useState([]);
   
 
 
@@ -214,10 +218,20 @@ const Chat = () => {
 
 
   useEffect(() => {
-    if (!chatId) return;
-
-    fetchParticipants();
-    checkAdminStatus();
+    const fetchAdminData = async () => {
+      try {
+        const response = await axios.get(`/api/chats/${chatId}/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAdminUser(response.data.admin);
+      } catch (error) {
+        console.error('Ошибка при получении данных администратора:', error);
+      }
+    };
+  
+    if (chatId) {
+      fetchAdminData();
+    }
   }, [chatId, token]);
 
 
@@ -316,6 +330,32 @@ const Chat = () => {
   };
 
 
+  const handleOpenAddParticipantModal = () => {
+    setIsAddParticipantModalOpen(true);
+  };
+  
+  const handleCloseAddParticipantModal = () => {
+    setIsAddParticipantModalOpen(false);
+    setNewParticipantEmail('');
+  };
+  
+  const handleAddParticipantSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('/api/chats/add-participant', 
+        { chatId, email: newParticipantEmail },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Участник успешно добавлен!');
+      fetchParticipants(); // Обновляем список участников
+      handleCloseAddParticipantModal();
+    } catch (error) {
+      console.error('Ошибка при добавлении участника:', error);
+      toast.error('Не удалось добавить участника');
+    }
+  };
+
+
   // Функция разворачивания длинных сообщений
   const toggleExpand = (messageId) => {
     setExpandedMessages((prev) =>
@@ -357,13 +397,7 @@ const Chat = () => {
             <img
                 src={message.sender.avatarUrl || '/default-avatar.png'}
                 alt={`${message.sender.nickname}'s avatar`}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%', // Круглая форма
-                  objectFit: 'cover', // Обрезка изображения
-                  marginRight: '10px',
-                }}
+                className="round-img"
               />
 
               <span className="nickname">{truncateNickname(message.sender.nickname)} : </span>
@@ -435,6 +469,14 @@ const Chat = () => {
 
       {/* Участники чата */}
       <div className="participants-section">
+
+      {isAdmin && (
+        <div className="admin-info">
+          <strong>Администратор:</strong> 
+          <span>{adminUser?.nickname || 'Загрузка...'}</span>
+        </div>
+      )}
+
         <h3>Участники:</h3>
         {participants.length > 0 ? (
           <ul>
@@ -445,13 +487,7 @@ const Chat = () => {
               <img
                 src={participant.avatarUrl || '/default-avatar.png'}
                 alt={`${participant.nickname}'s avatar`}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%', // Круглая форма
-                  objectFit: 'cover', // Обрезка изображения
-                  marginRight: '10px',
-                }}
+                className="round-img"
               />
 
 
@@ -470,8 +506,38 @@ const Chat = () => {
               </li>
             ))}
 
-            <button onClick={handleAddParticipant}>Добавить участника</button>
-            <button onClick={handleTransferAdmin}>Передать права администратора</button>
+            <div class="participants-section-footer">
+
+              {/* TODO: */} 
+              {/* <button onClick={handleAddParticipant}>Добавить участника</button> */}
+
+              {/* Кнопка открытия модального окна */}
+              <button onClick={handleOpenAddParticipantModal}>Добавить участника</button>
+
+              {/* Модальное окно */}
+              {isAddParticipantModalOpen && (
+                <div className="modal">
+                  <div className="modal-content">
+                    <span className="close" onClick={handleCloseAddParticipantModal}>&times;</span>
+                    <h2>Добавить участника</h2>
+                    <form onSubmit={handleAddParticipantSubmit}>
+                      <input
+                        type="email"
+                        value={newParticipantEmail}
+                        onChange={(e) => setNewParticipantEmail(e.target.value)}
+                        placeholder="Введите email участника"
+                        required
+                      />
+                      <button type="submit">Добавить</button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              <button onClick={handleTransferAdmin}>Передать права администратора</button>
+
+            </div>
+
           </ul>
         ) : (
           <p>Нет участников в этом чате.</p>

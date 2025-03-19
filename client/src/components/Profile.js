@@ -124,7 +124,7 @@ const Profile = ({ token }) => {
       {/* Отображение информации о пользователе */}
       {user && (
         <div>
-          <img src={user.avatarUrl || '../../public/default-avatar.png'} alt="Avatar" style={{ width: '50px', height: '50px' }} />
+          <img src={user.avatarUrl || '../../public/default-avatar.png'} alt="Avatar" className="round-img-large" />
           <p>Никнейм: {user.nickname}</p>
           <p>Email: {emailVisibility ? user.email : 'Скрыт'}</p>
         </div>

@@ -117,14 +117,27 @@ nav a:hover {
 }
 
 .chat-item ul {
+  display: flex;
+  flex-direction: column;
   list-style-type: none;
   padding: 0;
   margin-top: 5px;
 }
 
 .chat-item ul li {
+  display: flex; /* Используем Flexbox */
+  align-items: center; /* Выравнивание по центру по вертикали */
   font-size: 0.9em;
   color: #ccc;
+  margin-bottom: 5px; /* Добавляем отступ между участниками */
+}
+
+.chat-item ul li img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Круглая форма */
+  object-fit: cover; /* Обрезка изображения */
+  margin-right: 10px; /* Отступ между аватаром и именем */
 }
 
 /* Стили для выбранного чата */

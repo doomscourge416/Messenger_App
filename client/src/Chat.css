@@ -121,16 +121,25 @@
 }
 
 .participants-section li {
+  display: flex; /* Используем Flexbox */
+  align-items: center;
   padding: 5px 0;
   color: var(--text-color);
 }
 
+.participants-section-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 1%
+}
+
 .participants-section button {
-  margin-left: 10px;
+  margin-left: 1%;
 }
 
 .search-form {
-  margin-bottom: 20px;
+  margin: 2% 0%;
 }
 
 .search-form input {

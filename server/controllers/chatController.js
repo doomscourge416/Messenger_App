@@ -3,8 +3,7 @@ const sequelize = require('sequelize');
 
 exports.createChat = async (req, res) => {
   try {
-    console.log('Тело запроса:', req.body); // Добавьте это для отладки
-
+    
     if (!req.body || !req.body.participants || !req.body.type) {
       return res.status(400).json({ message: 'Необходимо указать participants и type' });
     }
@@ -26,6 +25,7 @@ exports.createChat = async (req, res) => {
 
 
     const userId = req.userId;
+
     // Создание чата
     const chat = await Chat.create({ 
       type,
@@ -40,7 +40,19 @@ exports.createChat = async (req, res) => {
     // Автоматически добавляем текущего пользователя TODO: Поменять реализацию на нормальную
     await chat.addParticipant(userId);
 
-    res.json({ message: 'Чат успешно создан', chat });
+
+    // Получаем обновленный список участников
+    const updatedChat = await Chat.findByPk(chat.id, {
+      include: [
+        {
+          model: User,
+          as: 'participants',
+          attributes: ['id', 'nickname'],
+        },
+      ],
+    });
+
+    res.json({ message: 'Чат успешно создан', chat: updatedChat });
   } catch (error) {
     console.error('Ошибка при создании чата:', error);
     res.status(500).json({ message: 'Ошибка сервера' });

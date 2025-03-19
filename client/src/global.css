@@ -33,6 +33,22 @@
     color: #dbd2b4;
   }
 
+  .round-img{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Круглая форма */
+    object-fit: cover; /* Обрезка изображения */
+    margin-right: 10px; /* Отступ справа */
+  }
+
+  .round-img-large{
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+
   nav {
     width: 100%;
     display: flex;
@@ -59,7 +75,7 @@
     background-color: #d4af37; /* Золотистая кнопка */
     color: #2a2a2a; /* Темно-серый текст */
     border: none;
-    padding: 8px 16px;
+    padding: 8px 10px;
     border-radius: 5px;
     cursor: pointer;
   }

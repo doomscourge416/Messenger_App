@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'; // Импортируем Routes и Route
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Home from './components/Home';
 import Chat from './components/Chat';
 import ChatList from './components/ChatList';
@@ -57,6 +59,7 @@ function App() {
         <Route path="/chats" element={<ChatList token={token} />} />
         <Route path="/chat/:chatId" element={<Chat />} />
       </Routes>
+      <ToastContainer />
     </div>
   );
 }
