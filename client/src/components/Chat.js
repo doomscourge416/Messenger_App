@@ -25,10 +25,9 @@ const Chat = () => {
 
 
   const fetchParticipants = async () => {
+    
     try {
-      // const response = await axios.get(`/api/chats/participants/${chatId}`, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+      console.log('fetchParticipants начал выполнение');
 
       const response = await axios.get(`/api/chats/${chatId}/participants`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -43,12 +42,43 @@ const Chat = () => {
         console.warn('Сервер не вернул список участников:', response.data);
         alert('Не удалось загрузить список участников.');
       }
+
+
+      // if (response.data.participants) {
+      //   setParticipants(response.data.participants);
+      // } else {
+      //   console.warn('Сервер не вернул список участников:', response.data);
+      //   alert('Не удалось загрузить участников чата.');
+      // }
+
+
+      const chatResponse = await axios.get(`/api/chats${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      console.log('Ответ сервера (админ): ', chatResponse.data);
+      setIsAdmin(chatResponse.data.chat.adminId === parseInt(localStorage.getItem('userId'), 10));
+
+
     } catch (error) {
       console.error('Ошибка при получении участников:', error.response?.data || error.message);
-      alert('Произошла ошибка при загрузке участников.');
+      // alert('Произошла ошибка при загрузке участников.');
     }
 
   };
+
+
+
+  // Эффект для загрузки данных при изменении chatId
+  useEffect(() => {
+    if (!chatId) {
+      console.warn('chatId не определен');
+      return;
+    }
+
+    console.log('useEffect вызвал fetchParticipants для chatId:', chatId);
+    fetchParticipants();
+  }, [chatId]);
 
 
   // Поиск пользователей
@@ -217,22 +247,37 @@ const Chat = () => {
   };
 
 
-  useEffect(() => {
-    const fetchAdminData = async () => {
-      try {
-        const response = await axios.get(`/api/chats/${chatId}/admin`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setAdminUser(response.data.admin);
-      } catch (error) {
-        console.error('Ошибка при получении данных администратора:', error);
-      }
-    };
+
+  const fetchAdminData = async () => {
+    try {
+      const chatResponse = await axios.get(`/api/chats/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('Ответ сервера (админ):', chatResponse.data);
+      const adminId = chatResponse.data.chat.adminId;
+      const currentUserId = parseInt(localStorage.getItem('userId'), 10);
+      setIsAdmin(adminId === currentUserId);
   
+      // Загружаем данные администратора
+      const adminUserResponse = await axios.get(`/api/user/${adminId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('Данные администратора:', adminUserResponse.data);
+      setAdminUser(adminUserResponse.data.user);
+    } catch (error) {
+      console.error('Ошибка при получении данных администратора:', error.response?.data || error.message);
+    }
+  };
+
+
+  useEffect(() => {
     if (chatId) {
       fetchAdminData();
     }
-  }, [chatId, token]);
+  }, [chatId]);
+
+
+  console.log('Текущий adminUser:', adminUser);
 
 
   const checkAdminStatus = async () => {
@@ -283,19 +328,22 @@ const Chat = () => {
   };
 
 
-  const handleBanParticipant = async (participantId) => {
-    try {
-      await axios.put(
-        '/api/chats/ban-participant',
-        { chatId, participantId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert('Участник успешно заблокирован!');
-      fetchParticipants(); // Обновляем список участников
-    } catch (error) {
-      console.error('Ошибка при блокировке участника:', error.response?.data || error.message);
-    }
-  };
+  useEffect(() => {
+    console.log('Текущее значение isAdmin:', isAdmin);
+  }, [isAdmin]);
+
+
+const handleBanParticipant = async (participantId) => {
+  try {
+    const response = await axios.put('/api/chats/ban-participant', { chatId, participantId }, { headers: { Authorization: `Bearer ${token}` } });
+    console.log('Ответ сервера (бан):', response.data);
+    alert('Участник успешно заблокирован!');
+    fetchParticipants(); // Обновляем список участников
+  } catch (error) {
+    console.error('Ошибка при блокировке участника:', error.response?.data || error.message);
+    alert('Не удалось заблокировать участника.');
+  }
+};
 
 
   const handleAddParticipant = async () => {
@@ -372,6 +420,8 @@ const Chat = () => {
     }
     return nickname;
   };
+
+  
 
 
   return (
@@ -470,11 +520,13 @@ const Chat = () => {
       {/* Участники чата */}
       <div className="participants-section">
 
-      {isAdmin && (
+      {isAdmin !== null ? (
         <div className="admin-info">
-          <strong>Администратор:</strong> 
+          <strong>Администратор:</strong>
           <span>{adminUser?.nickname || 'Загрузка...'}</span>
         </div>
+      ) : (
+        <p>Администратор не найден</p>
       )}
 
         <h3>Участники:</h3>

@@ -3,10 +3,11 @@ module.exports = {
     await queryInterface.addColumn('ChatParticipants', 'isBanned', {
       type: Sequelize.BOOLEAN,
       defaultValue: false,
+      allowNull: false,
     });
   },
 
-  down: async (queryInterface) => {
+  down: async (queryInterface, Sequelize) => {
     await queryInterface.removeColumn('ChatParticipants', 'isBanned');
   },
 };

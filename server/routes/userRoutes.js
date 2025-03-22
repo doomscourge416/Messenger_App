@@ -18,4 +18,7 @@ router.put('/email-visibility', authMiddleware, userController.toggleEmailVisibi
 // Поиск пользователей
 router.get('/search', authMiddleware, userController.searchUsers);
 
+// Получение информации о пользователе по ID
+router.get('/:userId', authMiddleware, userController.getUserById);
+
 module.exports = router;

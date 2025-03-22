@@ -23,6 +23,9 @@ router.get('/:chatId/participants', authMiddleware, chatController.getParticipan
 // Создание чата
 router.post('/create', authMiddleware, chatController.createChat);
 
+// Получение информации о чате по ID
+router.get('/:chatId', authMiddleware, chatController.getChatById);
+
 // Назначение нового администратора
 router.post('/transfer-admin', authMiddleware, chatController.transferAdmin);
 

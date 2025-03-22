@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { User } = require('../db');
 
+
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.userId; // ID пользователя из токена
@@ -16,6 +17,22 @@ exports.getProfile = async (req, res) => {
     res.json({ user });
   } catch (error) {
     console.error('Ошибка при получении профиля:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
+exports.getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'nickname', 'email'], // Возвращаем только нужные поля
+    });
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+    res.json({ user });
+  } catch (error) {
+    console.error('Ошибка при получении пользователя:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
