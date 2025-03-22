@@ -20,6 +20,8 @@ const Chat = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(null);
   const [expandedMessages, setExpandedMessages] = useState([]);
+  const [activeParticipants, setActiveParticipants] = useState([]);
+  const [bannedParticipants, setBannedParticipants] = useState([]);
   // const [forwardedHistory, setForwardedHistory] = useState([]);
   
 
@@ -59,6 +61,8 @@ const Chat = () => {
       console.log('Ответ сервера (админ): ', chatResponse.data);
       setIsAdmin(chatResponse.data.chat.adminId === parseInt(localStorage.getItem('userId'), 10));
 
+    setActiveParticipants(response.data.activeParticipants);
+    setBannedParticipants(response.data.bannedParticipants);
 
     } catch (error) {
       console.error('Ошибка при получении участников:', error.response?.data || error.message);
@@ -421,6 +425,28 @@ const handleBanParticipant = async (participantId) => {
     return nickname;
   };
 
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        const response = await axios.get(`/api/chats/access/${chatId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        if (response.data.accessGranted) {
+          fetchParticipants();
+        } else {
+          alert('У вас нет доступа к этому чату.');
+        }
+      } catch (error) {
+        console.error('Ошибка при проверке доступа:', error.response?.data || error.message);
+        alert('Произошла ошибка при проверке доступа.');
+      }
+    };
+  
+    checkAccess();
+  }, [chatId]);
+
   
 
 
@@ -519,6 +545,48 @@ const handleBanParticipant = async (participantId) => {
 
       {/* Участники чата */}
       <div className="participants-section">
+
+
+        {/* ---------------------- ТЕСТОВЫЙ JSX ---------------------- */}
+
+
+      <h3>Активные участники:</h3>
+      <ul>
+        {activeParticipants.length > 0 ? (
+          activeParticipants.map((participant) => (
+            <li key={participant.id}>
+              <strong>{participant.nickname}</strong>
+              {isAdmin && (
+                <button onClick={() => handleBanParticipant(participant.id)}>Забанить</button>
+              )}
+            </li>
+          ))
+        ) : (
+          <p>Нет активных участников в этом чате.</p>
+        )}
+      </ul>
+
+      <h3>Забаненные участники:</h3>
+      <ul>
+        {bannedParticipants.length > 0 ? (
+          bannedParticipants.map((participant) => (
+            <li key={participant.id}>
+              <strong>{participant.nickname}</strong>
+              {isAdmin && (
+                <button onClick={() => handleUnbanParticipant(participant.id)}>Разбанить</button>
+              )}
+            </li>
+          ))
+        ) : (
+          <p>Нет забаненных участников в этом чате.</p>
+        )}
+      </ul>
+
+
+      {/* ---------------------- ТЕСТОВЫЙ JSX ---------------------- */}
+
+
+
 
       {isAdmin !== null ? (
         <div className="admin-info">

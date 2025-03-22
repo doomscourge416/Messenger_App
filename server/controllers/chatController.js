@@ -135,8 +135,15 @@ exports.getParticipants = async (req,res) => {
       return res.status(404).json({ message: 'Чат не найден' });
     }
 
-    // Возвращаем список участников
-    res.json({ participants: chat.participants });
+    // Разделяем участников на активных и забаненных
+    const activeParticipants = chat.participants.filter((p) => !p.ChatParticipant.isBanned);
+    const bannedParticipants = chat.participants.filter((p) => p.ChatParticipant.isBanned);
+
+    res.json({
+      activeParticipants,
+      bannedParticipants,
+    });
+	
   } catch (error) {
     console.error('Ошибка при получении участников:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
@@ -172,7 +179,7 @@ exports.transferAdmin = async (req, res) => {
 exports.banParticipant = async (req, res) => {
   try {
     const { chatId, participantId } = req.body;
-
+	
     const chat = await Chat.findByPk(chatId);
     if (!chat) {
       return res.status(404).json({ message: 'Чат не найден' });
@@ -181,6 +188,18 @@ exports.banParticipant = async (req, res) => {
     await chat.update({
       bannedUsers: sequelize.fn('array_append', sequelize.col('bannedUsers'), participantId),
     });
+	
+	// Находим запись участника в таблице ChatParticipants
+    const chatParticipant = await ChatParticipant.findOne({
+      where: { chatId, userId: participantId },
+    });
+	
+	if (!chatParticipant) {
+      return res.status(404).json({ message: 'Участник не найден в этом чате' });
+    }
+	
+	// Блокируем участника
+    await chatParticipant.update({ isBanned: true });
 
     res.json({ message: 'Участник успешно заблокирован' });
   } catch (error) {
@@ -209,10 +228,48 @@ exports.unbanParticipant = async (req, res) => {
     await chat.update({
       bannedUsers: sequelize.fn('array_remove', sequelize.col('bannedUsers'), participantId),
     });
+	
+	// Находим запись участника в таблице ChatParticipants
+    const chatParticipant = await ChatParticipant.findOne({
+      where: { chatId, userId: participantId },
+    });
+
+    if (!chatParticipant) {
+      return res.status(404).json({ message: 'Участник не найден в этом чате' });
+    }
+
+    // Разблокируем участника
+    await chatParticipant.update({ isBanned: false });
 
     res.json({ message: 'Участник успешно разблокирован' });
   } catch (error) {
     console.error('Ошибка при разблокировке участника:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+};
+
+exports.checkChatAccess = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const userId = req.userId;
+
+    // Проверяем, является ли пользователь участником чата
+    const chatParticipant = await ChatParticipant.findOne({
+      where: { chatId, userId },
+    });
+
+    if (!chatParticipant) {
+      return res.status(403).json({ message: 'Вы не являетесь участником этого чата' });
+    }
+
+    // Проверяем, забанен ли пользователь
+    if (chatParticipant.isBanned) {
+      return res.status(403).json({ message: 'Вы забанены в этом чате' });
+    }
+
+    res.json({ accessGranted: true });
+  } catch (error) {
+    console.error('Ошибка при проверке доступа к чату:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
