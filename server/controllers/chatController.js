@@ -192,9 +192,29 @@ exports.transferAdmin = async (req, res) => {
 exports.banParticipant = async (req, res) => {
   try {
     const { chatId, participantId } = req.body;
+    const userId = req.user.id; // ID текущего пользователя
 
-    console.log('Бан участника:', { chatId, participantId });
+    console.log('Бан участника:', { chatId, participantId, userId });
 
+    // Проверяем, указан ли chatId и participantId
+    if (!chatId || !participantId) {
+      return res.status(400).json({ message: 'Необходимо указать chatId и participantId' });
+    }
+
+    // Находим чат
+    const chat = await Chat.findByPk(chatId);
+
+    if (!chat) {
+      console.warn('Чат не найден для chatId:', chatId);
+      return res.status(404).json({ message: 'Чат не найден' });
+    }
+
+    // Проверяем, является ли текущий пользователь администратором чата
+    if (chat.adminId !== userId) {
+      return res.status(403).json({ message: 'У вас нет прав администратора' });
+    }
+
+    // Находим запись в таблице ChatParticipants
     const chatParticipant = await ChatParticipant.findOne({
       where: { chatId, userId: participantId },
     });
@@ -204,6 +224,7 @@ exports.banParticipant = async (req, res) => {
       return res.status(404).json({ message: 'Участник не состоит в чате' });
     }
 
+    // Баним участника
     chatParticipant.isBanned = true;
     await chatParticipant.save();
 
@@ -218,8 +239,21 @@ exports.banParticipant = async (req, res) => {
 exports.unbanParticipant = async (req, res) => {
   try {
     const { chatId, participantId } = req.body;
+    const userId = req.user.id;
 
-    console.log('Разбан участника:', { chatId, participantId });
+    console.log('Разбан участника:', { chatId, participantId, userId });
+
+    // Находим чат
+    const chat = await Chat.findByPk(chatId);
+
+    if (!chat) {
+      return res.status(404).json({ message: 'Чат не найден' });
+    }
+
+    // Проверяем, является ли текущий пользователь администратором чата
+    if (chat.adminId !== userId) {
+      return res.status(403).json({ message: 'У вас нет прав администратора' });
+    }
 
     const chatParticipant = await ChatParticipant.findOne({
       where: { chatId, userId: participantId },

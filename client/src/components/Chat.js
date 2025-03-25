@@ -7,7 +7,7 @@ import '../Chat.css';
 
 const Chat = () => {
   const { chatId } = useParams();
-  console.log('Текущий чат ID: ', chatId);
+  // console.log('Текущий чат ID: ', chatId);
 
   const token = localStorage.getItem('messengerToken');
 
@@ -261,36 +261,36 @@ const Chat = () => {
 
 
 
-  const fetchAdminData = async () => {
+  const fetchChatDetails = async () => {
     try {
-      const chatResponse = await axios.get(`/api/chats/${chatId}`, {
+      // Запрашиваем данные чата
+      const response = await axios.get(`/api/chats/${chatId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Ответ сервера (админ):', chatResponse.data);
-      const adminId = chatResponse.data.chat.adminId;
-      const currentUserId = parseInt(localStorage.getItem('userId'), 10);
-      setIsAdmin(adminId === currentUserId);
+  
+      // Проверяем, является ли текущий пользователь администратором
+      const isAdmin = response.data.chat.adminId === parseInt(localStorage.getItem('userId'), 10);
+      setIsAdmin(isAdmin);
   
       // Загружаем данные администратора
-      const adminUserResponse = await axios.get(`/api/user/${adminId}`, {
+      const adminResponse = await axios.get(`/api/user/${response.data.chat.adminId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Данные администратора:', adminUserResponse.data);
-      setAdminUser(adminUserResponse.data.user);
+      setAdminUser(adminResponse.data.user);
     } catch (error) {
-      console.error('Ошибка при получении данных администратора:', error.response?.data || error.message);
+      console.error('Ошибка при загрузке данных чата:', error.response?.data || error.message);
     }
   };
 
 
   useEffect(() => {
     if (chatId) {
-      fetchAdminData();
+      fetchChatDetails();
     }
-  }, [chatId]);
+  }, [chatId, token]);
 
 
-  console.log('Текущий adminUser:', adminUser);
+  // console.log('Текущий adminUser:', adminUser);
 
 
   const checkAdminStatus = async () => {
@@ -350,9 +350,16 @@ const Chat = () => {
     try {
       console.log('Бан участника:', { chatId, participantId });
   
+      // Проверяем, указан ли chatId и participantId
+      if (!chatId || !participantId) {
+        console.error('Некорректные данные для бана:', { chatId, participantId });
+        alert('Некорректные данные для бана');
+        return;
+      }
+  
       const response = await axios.put(
         '/api/chats/ban-participant',
-        { chatId, participantId },
+        { chatId: parseInt(chatId, 10), participantId: parseInt(participantId, 10) }, // Преобразуем в числа
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
