@@ -1,4 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
+const Chat = require('./models/chat'); // Импорт модели Chat
+const User = require('./models/user'); // Импорт модели User
+const ChatParticipant = require('./models/chatParticipant'); // Импорт модели ChatParticipant
 require('dotenv').config();
 
 // Инициализация Sequelize
@@ -13,6 +16,23 @@ const db = {
   sequelize,
   Sequelize,
 };
+
+// Инициализация моделей
+const chatModel = Chat(sequelize, Sequelize.DataTypes);
+const userModel = User(sequelize, Sequelize.DataTypes);
+const chatParticipantModel = ChatParticipant(sequelize, Sequelize.DataTypes);
+
+// Настройка связей между моделями
+chatModel.belongsToMany(userModel, {
+  through: chatParticipantModel,
+  as: 'participants',
+  foreignKey: 'chatId',
+});
+userModel.belongsToMany(chatModel, {
+  through: chatParticipantModel,
+  as: 'chats',
+  foreignKey: 'userId',
+});
 
 // Загрузка моделей через models/index.js
 const models = require('./models/index'); // Импортируем объект моделей
@@ -30,4 +50,11 @@ try {
   console.error('Ошибка при загрузке модели BlacklistedToken:', error.message);
 }
 
-module.exports = db;
+module.exports = 
+  {
+  Chat: chatModel,
+  User: userModel,
+  ChatParticipant: chatParticipantModel,
+  sequelize,
+  db,
+};

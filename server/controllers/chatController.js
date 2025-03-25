@@ -1,4 +1,4 @@
-const { Chat, User } = require('../db'); 
+const { Chat, User, ChatParticipant } = require('../db'); 
 const sequelize = require('sequelize');
 
 exports.createChat = async (req, res) => {
@@ -192,31 +192,25 @@ exports.transferAdmin = async (req, res) => {
 exports.banParticipant = async (req, res) => {
   try {
     const { chatId, participantId } = req.body;
-	
-    const chat = await Chat.findByPk(chatId);
-    if (!chat) {
-      return res.status(404).json({ message: 'Чат не найден' });
-    }
 
-    await chat.update({
-      bannedUsers: sequelize.fn('array_append', sequelize.col('bannedUsers'), participantId),
-    });
-	
-	// Находим запись участника в таблице ChatParticipants
+    console.log('Бан участника:', { chatId, participantId });
+
     const chatParticipant = await ChatParticipant.findOne({
       where: { chatId, userId: participantId },
     });
-	
-	if (!chatParticipant) {
-      return res.status(404).json({ message: 'Участник не найден в этом чате' });
-    }
-	
-	// Блокируем участника
-    await chatParticipant.update({ isBanned: true });
 
-    res.json({ message: 'Участник успешно заблокирован' });
+    if (!chatParticipant) {
+      console.warn('Запись в таблице ChatParticipant не найдена:', { chatId, participantId });
+      return res.status(404).json({ message: 'Участник не состоит в чате' });
+    }
+
+    chatParticipant.isBanned = true;
+    await chatParticipant.save();
+
+    console.log('Участник успешно забанен:', participantId);
+    res.json({ message: 'Участник успешно забанен' });
   } catch (error) {
-    console.error('Ошибка при блокировке участника:', error);
+    console.error('Ошибка при бане участника:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };
@@ -224,39 +218,25 @@ exports.banParticipant = async (req, res) => {
 exports.unbanParticipant = async (req, res) => {
   try {
     const { chatId, participantId } = req.body;
-    const currentUserId = req.userId;
 
-    // Находим чат
-    const chat = await Chat.findByPk(chatId);
-    if (!chat) {
-      return res.status(404).json({ message: 'Чат не найден' });
-    }
+    console.log('Разбан участника:', { chatId, participantId });
 
-    // Проверяем права текущего пользователя
-    if (chat.adminId !== currentUserId) {
-      return res.status(403).json({ message: 'Вы не являетесь администратором этого чата' });
-    }
-
-    // Разблокируем участника
-    await chat.update({
-      bannedUsers: sequelize.fn('array_remove', sequelize.col('bannedUsers'), participantId),
-    });
-	
-	// Находим запись участника в таблице ChatParticipants
     const chatParticipant = await ChatParticipant.findOne({
       where: { chatId, userId: participantId },
     });
 
     if (!chatParticipant) {
-      return res.status(404).json({ message: 'Участник не найден в этом чате' });
+      console.warn('Запись в таблице ChatParticipant не найдена:', { chatId, participantId });
+      return res.status(404).json({ message: 'Участник не состоит в чате' });
     }
 
-    // Разблокируем участника
-    await chatParticipant.update({ isBanned: false });
+    chatParticipant.isBanned = false;
+    await chatParticipant.save();
 
-    res.json({ message: 'Участник успешно разблокирован' });
+    console.log('Участник успешно разбанен:', participantId);
+    res.json({ message: 'Участник успешно разбанен' });
   } catch (error) {
-    console.error('Ошибка при разблокировке участника:', error);
+    console.error('Ошибка при разбане участника:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };

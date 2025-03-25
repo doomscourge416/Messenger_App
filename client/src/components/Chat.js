@@ -346,17 +346,25 @@ const Chat = () => {
   }, [isAdmin]);
 
 
-const handleBanParticipant = async (participantId) => {
-  try {
-    const response = await axios.put('/api/chats/ban-participant', { chatId, participantId }, { headers: { Authorization: `Bearer ${token}` } });
-    console.log('Ответ сервера (бан):', response.data);
-    alert('Участник успешно заблокирован!');
-    fetchParticipants(); // Обновляем список участников
-  } catch (error) {
-    console.error('Ошибка при блокировке участника:', error.response?.data || error.message);
-    alert('Не удалось заблокировать участника.');
-  }
-};
+  const handleBanParticipant = async (participantId) => {
+    try {
+      console.log('Бан участника:', { chatId, participantId });
+  
+      const response = await axios.put(
+        '/api/chats/ban-participant',
+        { chatId, participantId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      console.log('Ответ сервера (бан):', response.data);
+  
+      alert('Участник успешно заблокирован!');
+      fetchParticipants(); // Обновляем список участников
+    } catch (error) {
+      console.error('Ошибка при бане участника:', error.response?.data || error.message);
+      alert('Не удалось заблокировать участника.');
+    }
+  };
 
 
   const handleAddParticipant = async () => {
