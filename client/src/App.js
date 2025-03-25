@@ -37,14 +37,39 @@ function App() {
 
   // Для обработки событий WebSocket
   useEffect(() => {
+    if (!chatId) {
+      console.warn('chatId не определен');
+      return;
+    }
+  
     const socket = new WebSocket(`ws://localhost:5000?chatId=${chatId}`);
+  
+    socket.onopen = () => {
+      console.log('Подключен к WebSocket');
+    };
+  
     socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'editMessage') {
-        setMessages((prev) => prev.map(msg => msg.id === data.id ? { ...msg, content: data.content } : msg));
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'editMessage') {
+          setMessages((prev) => prev.map(msg => msg.id === data.id ? { ...msg, content: data.content } : msg));
+        }
+      } catch (error) {
+        console.error('Ошибка при парсинге данных WebSocket:', error);
       }
     };
-    return () => socket.close();
+  
+    socket.onerror = (error) => {
+      console.error('Ошибка WebSocket:', error);
+    };
+  
+    socket.onclose = () => {
+      console.log('Отключен от WebSocket');
+    };
+  
+    return () => {
+      socket.close();
+    };
   }, [chatId]);
 
   return (
@@ -58,6 +83,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/chats" element={<ChatList token={token} />} />
         <Route path="/chat/:chatId" element={<Chat />} />
+        {/* <Route path="/chats/participants/:chatId" element={<Chat />} /> */}
       </Routes>
       <ToastContainer />
     </div>

@@ -116,34 +116,47 @@ exports.getChatById = async (req, res) => {
   }
 };
 
-exports.getParticipants = async (req,res) => {
+exports.getParticipants = async (req, res) => {
   try {
     const { chatId } = req.params;
+
+    console.log('Запрос на получение участников для чата:', chatId);
 
     // Находим чат
     const chat = await Chat.findByPk(chatId, {
       include: [
         {
           model: User,
-          as: 'participants', // Связь между чатом и пользователями
+          as: 'participants',
           attributes: ['id', 'nickname', 'email'],
+          through: { attributes: ['isBanned'] },
         },
       ],
     });
 
     if (!chat) {
+      console.warn('Чат не найден для chatId:', chatId);
       return res.status(404).json({ message: 'Чат не найден' });
     }
 
+    console.log('Найденные участники:', JSON.stringify(chat.participants, null, 2));
+
     // Разделяем участников на активных и забаненных
-    const activeParticipants = chat.participants.filter((p) => !p.ChatParticipant.isBanned);
-    const bannedParticipants = chat.participants.filter((p) => p.ChatParticipant.isBanned);
+    const activeParticipants = chat.participants.filter((p) => {
+      const isBanned = p.ChatParticipant?.isBanned || false;
+      return !isBanned;
+    });
+
+    const bannedParticipants = chat.participants.filter((p) => {
+      const isBanned = p.ChatParticipant?.isBanned || false;
+      return isBanned;
+    });
 
     res.json({
+      participants: chat.participants,
       activeParticipants,
       bannedParticipants,
     });
-	
   } catch (error) {
     console.error('Ошибка при получении участников:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
@@ -248,28 +261,32 @@ exports.unbanParticipant = async (req, res) => {
   }
 };
 
-exports.checkChatAccess = async (req, res) => {
+exports.checkAccess = async (req, res) => {
   try {
     const { chatId } = req.params;
-    const userId = req.userId;
+    const userId = req.user.id;
 
-    // Проверяем, является ли пользователь участником чата
-    const chatParticipant = await ChatParticipant.findOne({
-      where: { chatId, userId },
+    console.log('Проверка доступа для chatId:', chatId, 'userId:', userId);
+
+    const chat = await Chat.findByPk(chatId, {
+      include: [
+        {
+          model: User,
+          as: 'participants',
+          where: { id: userId },
+        },
+      ],
     });
 
-    if (!chatParticipant) {
-      return res.status(403).json({ message: 'Вы не являетесь участником этого чата' });
+    if (!chat) {
+      console.warn('Чат не найден для chatId:', chatId);
+      return res.status(404).json({ accessGranted: false });
     }
 
-    // Проверяем, забанен ли пользователь
-    if (chatParticipant.isBanned) {
-      return res.status(403).json({ message: 'Вы забанены в этом чате' });
-    }
-
+    console.log('Доступ разрешен для chatId:', chatId);
     res.json({ accessGranted: true });
   } catch (error) {
-    console.error('Ошибка при проверке доступа к чату:', error);
+    console.error('Ошибка при проверке доступа:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 };

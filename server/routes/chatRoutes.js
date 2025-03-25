@@ -14,11 +14,14 @@ router.use((req, res, next) => {
 // Получение списка чатов
 router.get('/list', authMiddleware, chatController.getChats);
 
+// Получение прав на чат
+router.get('/chats/access/:chatId', authMiddleware, chatController.checkAccess);
+
 // Получение чатов
 router.get('/chats', authMiddleware, chatController.getChats);
 
 // Получение списка участников
-router.get('/:chatId/participants', authMiddleware, chatController.getParticipants);
+router.get('/participants/:chatId', authMiddleware, chatController.getParticipants);
 
 // Создание чата
 router.post('/create', authMiddleware, chatController.createChat);

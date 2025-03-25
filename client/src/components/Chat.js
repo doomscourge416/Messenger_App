@@ -7,7 +7,10 @@ import '../Chat.css';
 
 const Chat = () => {
   const { chatId } = useParams();
+  console.log('Текущий чат ID: ', chatId);
+
   const token = localStorage.getItem('messengerToken');
+
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,48 +30,40 @@ const Chat = () => {
 
 
   const fetchParticipants = async () => {
+
+    if (!chatId) {
+      console.warn('chatId не определен');
+      return;
+    }
     
     try {
       console.log('fetchParticipants начал выполнение');
-
-      const response = await axios.get(`/api/chats/${chatId}/participants`, {
+  
+      const response = await axios.get(`/api/chats/participants/${chatId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      console.log('Ответ сервера от fetchParticipants:', response.data); // Логируем ответ
-
-
+  
+      console.log('Ответ сервера от fetchParticipants:', response.data);
+  
       if (response.data && Array.isArray(response.data.participants)) {
         setParticipants(response.data.participants);
       } else {
         console.warn('Сервер не вернул список участников:', response.data);
-        alert('Не удалось загрузить список участников.');
+        alert('Не удалось загрузить участников.');
       }
-
-
-      // if (response.data.participants) {
-      //   setParticipants(response.data.participants);
-      // } else {
-      //   console.warn('Сервер не вернул список участников:', response.data);
-      //   alert('Не удалось загрузить участников чата.');
-      // }
-
-
-      const chatResponse = await axios.get(`/api/chats${chatId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
   
-      console.log('Ответ сервера (админ): ', chatResponse.data);
-      setIsAdmin(chatResponse.data.chat.adminId === parseInt(localStorage.getItem('userId'), 10));
-
-    setActiveParticipants(response.data.activeParticipants);
-    setBannedParticipants(response.data.bannedParticipants);
-
+      // Разделяем участников на активных и забаненных
+      if (response.data.activeParticipants) {
+        setActiveParticipants(response.data.activeParticipants);
+      }
+      if (response.data.bannedParticipants) {
+        setBannedParticipants(response.data.bannedParticipants);
+      }
     } catch (error) {
+      console.log(error);
       console.error('Ошибка при получении участников:', error.response?.data || error.message);
-      // alert('Произошла ошибка при загрузке участников.');
+      alert('Произошла ошибка при загрузке участников.');
     }
-
   };
 
 
@@ -99,8 +94,13 @@ const Chat = () => {
     }
   };
 
+  let isWebSocketInitialized = false;
+
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatId || isWebSocketInitialized) {
+      console.warn('chatId не определен или WebSocket уже инициализирован');
+      return;
+    }
 
     // Создаем экземпляр WebSocket
     const websocket = new WebSocketService(chatId);
@@ -108,16 +108,25 @@ const Chat = () => {
     // Подключаемся и передаем коллбэк для обработки сообщений
     websocket.connect((data) => {
       console.log('Получено событие WebSocket:', data);
+      
       if (data.type === 'newMessage') {
+
         setMessages((prevMessages) => [...prevMessages, data]);
+
       } else if (data.type === 'editMessage') {
+
         setMessages((prevMessages) =>
           prevMessages.map((msg) => (msg.id === data.id ? { ...msg, content: data.content } : msg))
         );
+
       } else if (data.type === 'deleteMessage') {
+
         setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== data.id));
       }
     });
+
+      // Отмечаем, что WebSocket инициализирован
+  isWebSocketInitialized = true;
 
     return () => {
       websocket.disconnect();
@@ -426,26 +435,23 @@ const handleBanParticipant = async (participantId) => {
   };
 
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      try {
-        const response = await axios.get(`/api/chats/access/${chatId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-  
-        if (response.data.accessGranted) {
-          fetchParticipants();
-        } else {
-          alert('У вас нет доступа к этому чату.');
-        }
-      } catch (error) {
-        console.error('Ошибка при проверке доступа:', error.response?.data || error.message);
-        alert('Произошла ошибка при проверке доступа.');
+
+  const checkAccess = async () => {
+    try {
+      const response = await axios.get(`/api/chats/access/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data.accessGranted) {
+        fetchParticipants();
+      } else {
+        alert('У вас нет доступа к этому чату.');
       }
-    };
-  
-    checkAccess();
-  }, [chatId]);
+    } catch (error) {
+      console.error('Ошибка при проверке доступа:', error.response?.data || error.message);
+      alert('Произошла ошибка при проверке доступа.');
+    }
+  };
 
   
 
