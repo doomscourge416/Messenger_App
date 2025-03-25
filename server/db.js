@@ -1,7 +1,9 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const Chat = require('./models/chat'); // Импорт модели Chat
 const User = require('./models/user'); // Импорт модели User
+const Message = require('./models/message'); // Импорт модели Message
 const ChatParticipant = require('./models/chatParticipant'); // Импорт модели ChatParticipant
+const ForwardedMessages = require('./models/forwardedMessages'); // Импорт модели ForwardedMessages
 require('dotenv').config();
 
 // Инициализация Sequelize
@@ -20,6 +22,8 @@ const db = {
 // Инициализация моделей
 const chatModel = Chat(sequelize, Sequelize.DataTypes);
 const userModel = User(sequelize, Sequelize.DataTypes);
+const messageModel = Message(sequelize, Sequelize.DataTypes);
+const forwardedMessagesModel = ForwardedMessages(sequelize, Sequelize.DataTypes);
 const chatParticipantModel = ChatParticipant(sequelize, Sequelize.DataTypes);
 
 // Настройка связей между моделями
@@ -32,6 +36,10 @@ userModel.belongsToMany(chatModel, {
   through: chatParticipantModel,
   as: 'chats',
   foreignKey: 'userId',
+});
+messageModel.belongsTo(userModel, { 
+  as: 'sender',
+  foreignKey: 'senderId' 
 });
 
 // Загрузка моделей через models/index.js
@@ -54,6 +62,8 @@ module.exports =
   {
   Chat: chatModel,
   User: userModel,
+  Message: messageModel,
+  ForwardedMessages: forwardedMessagesModel,
   ChatParticipant: chatParticipantModel,
   sequelize,
   db,
