@@ -1,9 +1,27 @@
 const { Chat, NotificationSettings } = require('../db');
+const isUserBanned = async (chatId, userId) => {
+  if (!chatId || !userId) {
+    console.error('Недостаточно данных для проверки бана:', { chatId, userId });
+    return false;
+  }
+
+  const chatParticipant = await ChatParticipant.findOne({
+    where: { chatId, userId },
+  });
+
+  return chatParticipant?.isBanned || false; // Возвращаем true, если пользователь забанен
+};
 
 exports.toggleMuteChat = async (req, res) => {
     try {
       const { chatId } = req.body;
       const userId = req.userId;
+
+      // Проверяем, забанен ли пользователь
+      const isBanned = await isUserBanned(chatId, userId);
+      if (isBanned) {
+        return res.status(403).json({ message: 'Вы забанены в этом чате' });
+      }
   
       if (!chatId) {
         return res.status(400).json({ message: 'Необходимо указать chatId' });
@@ -41,6 +59,7 @@ exports.toggleMuteChat = async (req, res) => {
     }
 };
 
+// TODO: 
 exports.getNotificationSettings = async (req, res) => {
     try {
       const { chatId } = req.params;

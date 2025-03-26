@@ -17,6 +17,7 @@ const Chat = () => {
   const [foundUsers, setFoundUsers] = useState([]);
   const [participants, setParticipants] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
   const [isAddParticipantModalOpen, setIsAddParticipantModalOpen] = useState(false);
   const [newParticipantEmail, setNewParticipantEmail] = useState('');
@@ -160,8 +161,14 @@ const Chat = () => {
         });
         console.log('Сообщения:', response.data.messages);
         setMessages(response.data.messages); // Устанавливаем сообщения в состояние
+        setIsBanned(response.data.isBanned); // Обновляем статус бана
       } catch (error) {
-        console.error('Ошибка при получении сообщений:', error.response?.data || error.message);
+        if (error.response?.status === 403 && error.response?.data?.message) {
+          alert(error.response.data.message); // Показываем сообщение об ошибке
+        } else {
+          console.error('Ошибка при загрузке сообщений:', error);
+          alert('Не удалось загрузить сообщения.');
+        }
       }
     };
 
@@ -174,6 +181,12 @@ const Chat = () => {
   // Отправка сообщения через API
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isBanned) {
+      alert('Вы забанены в этом чате');
+      return;
+    }
+
     try {
       await axios.post(
         '/api/messages/send',
@@ -487,61 +500,45 @@ const Chat = () => {
 
       {/* Список сообщений */}
       <ul className="message-list">
-        {messages.length > 0 ? (
+        {isBanned ? (
+          <p>Вы забанены в этом чате</p>
+        ) : messages.length > 0 ? (
           messages.map((message) => (
             <li key={message.id} className="message-item">
-
-            <img
+              <img
                 src={message.sender.avatarUrl || '/default-avatar.png'}
                 alt={`${message.sender.nickname}'s avatar`}
                 className="round-img"
               />
-
               <span className="nickname">{truncateNickname(message.sender.nickname)} : </span>
-
-              <p className={`message-content ${expandedMessages.includes(message.id) ? 'expanded' : ''}`}
-              >
+              <p className={`message-content ${expandedMessages.includes(message.id) ? 'expanded' : ''}`}>
                 {message.content}
               </p>
-
               {message.content.length > 100 && !expandedMessages.includes(message.id) && (
-                <button
-                  className="expand-button"
-                  onClick={() => toggleExpand(message.id)}
-                >
+                <button className="expand-button" onClick={() => toggleExpand(message.id)}>
                   Развернуть
                 </button>
               )}
               {expandedMessages.includes(message.id) && (
-                <button
-                  className="expand-button"
-                  onClick={() => toggleExpand(message.id)}
-                >
+                <button className="expand-button" onClick={() => toggleExpand(message.id)}>
                   Свернуть
                 </button>
               )}
-
               {/* Кнопка для открытия меню */}
-              <button className="message-actions-button"
+              <button
+                className="message-actions-button"
                 onClick={() => setMenuOpen(message.id === menuOpen ? null : message.id)}
               >
                 ...
               </button>
-
               {/* Меню действий */}
               {menuOpen === message.id && (
                 <div className="message-actions-menu">
                   <button onClick={() => handleEdit(message.id, prompt('Введите новое сообщение:'))}>
                     Редактировать
                   </button>
-
-                  <button onClick={() => handleDelete(message.id)}>
-                    Удалить
-                  </button>
-                  
-                  <button onClick={() => handleForward(message.id)}>
-                    Переслать
-                  </button>
+                  <button onClick={() => handleDelete(message.id)}>Удалить</button>
+                  <button onClick={() => handleForward(message.id)}>Переслать</button>
                 </div>
               )}
             </li>

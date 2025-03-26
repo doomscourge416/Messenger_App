@@ -1,5 +1,17 @@
 const { Chat, User, ChatParticipant } = require('../db'); 
 const sequelize = require('sequelize');
+const isUserBanned = async (chatId, userId) => {
+  if (!chatId || !userId) {
+    console.error('Недостаточно данных для проверки бана:', { chatId, userId });
+    return false;
+  }
+
+  const chatParticipant = await ChatParticipant.findOne({
+    where: { chatId, userId },
+  });
+
+  return chatParticipant?.isBanned || false; // Возвращаем true, если пользователь забанен
+};
 
 exports.createChat = async (req, res) => {
   try {
@@ -80,17 +92,24 @@ exports.getChats = async (req, res) => {
       ],
     });
 
+    // Фильтруем чаты, исключая те, где пользователь забанен
+    const filteredChats = user.chats.filter((chat) => {
+      const participant = chat.participants.find((p) => p.id === userId);
+      return !participant.ChatParticipant.isBanned;
+    });
+
     if (!user || !user.chats) {
       console.log('Чаты не найдены для пользователя:', userId);
       return res.status(404).json({ message: 'Чаты не найдены' });
     }
 
-    console.log('Загруженные чаты:', user.chats);
-    res.json({ chats: user.chats });
+    console.log('Загруженные чаты:', filteredChats);
+    res.json({ chats: filteredChats });
   } catch (error) {
     console.error('Ошибка при получении чатов:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
+
 };
 
 exports.getChatById = async (req, res) => {
@@ -129,7 +148,9 @@ exports.getParticipants = async (req, res) => {
           model: User,
           as: 'participants',
           attributes: ['id', 'nickname', 'email'],
-          through: { attributes: ['isBanned'] },
+          through: { 
+            attributes: ['isBanned'] 
+          },
         },
       ],
     });
@@ -142,15 +163,19 @@ exports.getParticipants = async (req, res) => {
     console.log('Найденные участники:', JSON.stringify(chat.participants, null, 2));
 
     // Разделяем участников на активных и забаненных
-    const activeParticipants = chat.participants.filter((p) => {
-      const isBanned = p.ChatParticipant?.isBanned || false;
-      return !isBanned;
-    });
+    // const activeParticipants = chat.participants.filter((p) => {
+    //   const isBanned = p.ChatParticipant?.isBanned || false;
+    //   return !isBanned;
+    // });
 
-    const bannedParticipants = chat.participants.filter((p) => {
-      const isBanned = p.ChatParticipant?.isBanned || false;
-      return isBanned;
-    });
+    // const bannedParticipants = chat.participants.filter((p) => {
+    //   const isBanned = p.ChatParticipant?.isBanned || false;
+    //   return isBanned;
+    // });
+
+    // Разделяем участников на активных и забаненных
+    const activeParticipants = chat.participants.filter((p) => !p.ChatParticipant?.isBanned);
+    const bannedParticipants = chat.participants.filter((p) => p.ChatParticipant?.isBanned);
 
     res.json({
       participants: chat.participants,

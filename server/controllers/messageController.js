@@ -1,5 +1,18 @@
-const { Chat, Message, User, ForwardedMessages, Op } = require('../db');
+const { Chat, Message, User, ForwardedMessages, ChatParticipant, Op } = require('../db');
+const isUserBanned = async (chatId, userId) => {
+  if (!chatId || !userId) {
+    console.error('Недостаточно данных для проверки бана:', { chatId, userId });
+    return false;
+  }
 
+  const chatParticipant = await ChatParticipant.findOne({
+    where: { chatId, userId },
+  });
+
+  return chatParticipant?.isBanned || false; // Возвращаем true, если пользователь забанен
+};
+
+// TODO:
 // Отправка сообщения
 exports.sendMessage = async (req, res) => {
   try {
@@ -9,6 +22,12 @@ exports.sendMessage = async (req, res) => {
 
     if (!chatId || !content) {
       return res.status(400).json({ message: 'Необходимо указать chatId и content' });
+    }
+
+    // Проверяем, забанен ли пользователь
+    const isBanned = await isUserBanned(chatId, userId);
+    if (isBanned) {
+      return res.status(403).json({ message: 'Вы забанены в этом чате' });
     }
 
     // Проверяем, существует ли чат
@@ -64,9 +83,28 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
+// TODO:
 exports.getMessagesByChat = async (req, res) => {
+
   try {
     const { chatId } = req.params;
+    const userId = req.userId;
+
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Необходима авторизация' });
+    }
+
+    if (!chatId) {
+      return res.status(400).json({ message: 'Необходимо указать chatId' });
+    }
+
+
+    // Проверяем, забанен ли пользователь
+    const isBanned = await isUserBanned(chatId, userId);
+    if (isBanned) {
+      return res.status(403).json({ message: 'Вы забанены в этом чате' });
+    }
 
     // Проверяем, существует ли чат
     const chat = await Chat.findByPk(chatId);
@@ -88,7 +126,8 @@ exports.getMessagesByChat = async (req, res) => {
     });
 
     console.log('Загруженные сообщения:', messages); // Лог загруженных сообщений
-    res.json({ messages });
+    res.json({ messages, isBanned });
+    console.log('Ответ сервера из getmessagesbychat:', { messages, isBanned });
   } catch (error) {
     console.error('Ошибка при получении сообщений:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
