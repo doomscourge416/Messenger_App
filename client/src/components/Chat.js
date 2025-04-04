@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from "react-router-dom";
 import axios from 'axios';
 import WebSocketService from '../services/websocket';
 import { toast } from 'react-toastify';
+import { NotificationProvider, useNotification } from './NotificationContext';
 import '../Chat.css';
+
+
+
 
 const Chat = () => {
   const { chatId } = useParams();
@@ -27,7 +31,8 @@ const Chat = () => {
   const [activeParticipants, setActiveParticipants] = useState([]);
   const [bannedParticipants, setBannedParticipants] = useState([]);
   // const [forwardedHistory, setForwardedHistory] = useState([]);
-  
+
+  const { playNotificationSound, showNotificationPopup } = useNotification();
 
 
   const fetchParticipants = async () => {
@@ -104,7 +109,16 @@ const Chat = () => {
     }
 
     // Создаем экземпляр WebSocket
-    const websocket = new WebSocketService(chatId);
+    const websocket = new WebSocketService(chatId, (data) => {
+      if (data.type === 'newMessage') {
+        setMessages((prev) => [...prev, data]);
+
+        if (!isMuted) {
+          playNotificationSound();
+          showNotificationPopup(data);
+        }
+      }
+    });
 
     // Подключаемся и передаем коллбэк для обработки сообщений
     websocket.connect((data) => {
@@ -255,7 +269,6 @@ const Chat = () => {
       alert('Не удалось переслать сообщение.');
     }
   };
-
 
   // Мутинг чата
   const handleMute = async () => {
@@ -485,6 +498,8 @@ const Chat = () => {
 
 
   return (
+    
+    
     <div className='chat-container'>
 
       <div className="chat-header">
@@ -709,6 +724,7 @@ const Chat = () => {
 
                  
     </div>
+    
   );
 };
 

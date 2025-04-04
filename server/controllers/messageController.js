@@ -125,9 +125,9 @@ exports.getMessagesByChat = async (req, res) => {
       order: [['createdAt', 'ASC']], // Сортируем сообщения по времени
     });
 
-    console.log('Загруженные сообщения:', messages); // Лог загруженных сообщений
+    // TODO: console.log('Загруженные сообщения:', messages); // Лог загруженных сообщений
     res.json({ messages, isBanned });
-    console.log('Ответ сервера из getmessagesbychat:', { messages, isBanned });
+    // TODO: console.log('Ответ сервера из getmessagesbychat:', { messages, isBanned });
   } catch (error) {
     console.error('Ошибка при получении сообщений:', error);
     res.status(500).json({ message: 'Ошибка сервера' });

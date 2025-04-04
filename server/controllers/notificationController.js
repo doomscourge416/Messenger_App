@@ -1,4 +1,4 @@
-const { Chat, NotificationSettings } = require('../db');
+const { Chat, NotificationSettings, ChatParticipant } = require('../db');
 const isUserBanned = async (chatId, userId) => {
   if (!chatId || !userId) {
     console.error('Недостаточно данных для проверки бана:', { chatId, userId });
@@ -17,39 +17,45 @@ exports.toggleMuteChat = async (req, res) => {
       const { chatId } = req.body;
       const userId = req.userId;
 
+      if (!chatId) {
+        return res.status(400).json({ message: 'Необходимо указать chatId' });
+      }
+
+      if (!userId) {
+        return res.status(401).json({ message: 'Необходима авторизация' });
+      }
+
       // Проверяем, забанен ли пользователь
       const isBanned = await isUserBanned(chatId, userId);
       if (isBanned) {
         return res.status(403).json({ message: 'Вы забанены в этом чате' });
       }
-  
-      if (!chatId) {
-        return res.status(400).json({ message: 'Необходимо указать chatId' });
-      }
-  
-      // Находим чат
-      const chat = await Chat.findByPk(chatId);
-      if (!chat) {
-        return res.status(404).json({ message: 'Чат не найден' });
-      }
-  
-      // Проверяем, является ли пользователь участником чата
-      const isParticipant = await chat.hasParticipant(userId);
-      if (!isParticipant) {
-        return res.status(403).json({ message: 'Вы не являетесь участником этого чата' });
-      }
-  
+
       // Находим или создаем настройки уведомлений
       let notificationSettings = await NotificationSettings.findOne({
         where: { userId, chatId },
       });
-  
+
       if (!notificationSettings) {
-        notificationSettings = await NotificationSettings.create({ userId, chatId });
+        notificationSettings = await NotificationSettings.create({ userId, chatId, isMuted: false, });
       }
+    
+      // // Находим чат
+      // const chat = await Chat.findByPk(chatId);
+      // if (!chat) {
+      //   return res.status(404).json({ message: 'Чат не найден' });
+      // }
+  
+      // // Проверяем, является ли пользователь участником чата
+      // const isParticipant = await chat.hasParticipant(userId);
+      // if (!isParticipant) {
+      //   return res.status(403).json({ message: 'Вы не являетесь участником этого чата' });
+      // }
+    
   
       // Переключаем статус mute
       notificationSettings.isMuted = !notificationSettings.isMuted;
+      console.log('Статус уведомлений :' , notificationSettings.isMuted);
       await notificationSettings.save();
   
       res.json({ message: 'Настройки уведомлений успешно обновлены', notificationSettings });
@@ -67,6 +73,10 @@ exports.getNotificationSettings = async (req, res) => {
   
       if (!chatId) {
         return res.status(400).json({ message: 'Необходимо указать chatId' });
+      }
+
+      if (!userId) {
+        return res.status(401).json({ message: 'Необходима авторизация' });
       }
   
       // Находим чат

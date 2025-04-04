@@ -1,7 +1,8 @@
 class WebSocketService {
-  constructor(chatId) {
+  constructor(chatId, onMessageCallback) {
     this.chatId = chatId;
-    this.socket = null;
+    this.socket = new WebSocket(`ws://localhost:5000?chatId=${chatId}`);
+    this.onMessageCallback = onMessageCallback;
   }
 
   connect(onMessageCallback) { // Строка 15: принимаем коллбэк
@@ -13,6 +14,7 @@ class WebSocketService {
     };
 
     this.socket.onmessage = (event) => {
+
       if (typeof event.data !== 'string') {
         console.warn('Получены некорректные данные:', event.data);
         return;
@@ -22,12 +24,16 @@ class WebSocketService {
         const data = JSON.parse(event.data);
         console.log('Новое сообщение:', data);
 
-        if (onMessageCallback) {
-          onMessageCallback(data); // Строка 30: вызываем коллбэк
+        if (this.onMessageCallback) {
+          this.onMessageCallback(data);
         }
       } catch (error) {
         console.error('Ошибка при парсинге данных WebSocket:', error.message);
       }
+    };
+
+    this.socket.onerror = (error) => {
+      console.error('Ошибка WebSocket:', error);
     };
 
     this.socket.onclose = () => {
