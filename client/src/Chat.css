@@ -21,6 +21,20 @@
   margin-bottom: 20px;
 }
 
+.read-status {
+  font-size: 12px;
+  color: #888;
+  margin-left: 10px;
+}
+
+.read-status.success {
+  color: green;
+}
+
+.read-status.unread {
+  color: red;
+}
+
 .message-item {
   display: flex;
   justify-content: space-between;

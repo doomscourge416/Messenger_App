@@ -35,20 +35,20 @@ function App() {
   const [isMuted, setIsMuted] = useState(false);
 
 
-  // Получение настроек уведомлений
-  useEffect(() => {
-    const fetchNotificationSettings = async () => {
-      try {
-        const response = await axios.get(`/api/notifications/${chatId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setIsMuted(response.data.isMuted);
-      } catch (error) {
-        console.error('Ошибка при получении настроек уведомлений:', error.response?.data || error.message);
-      }
-    };
-    fetchNotificationSettings();
-  }, [chatId, token]);
+  // // Получение настроек уведомлений
+  // useEffect(() => {
+  //   const fetchNotificationSettings = async () => {
+  //     try {
+  //       const response = await axios.get(`/api/notifications/${chatId}`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       setIsMuted(response.data.isMuted);
+  //     } catch (error) {
+  //       console.error('Ошибка при получении настроек уведомлений:', error.response?.data || error.message);
+  //     }
+  //   };
+  //   fetchNotificationSettings();
+  // }, [chatId, token]);
 
 
 
@@ -70,13 +70,14 @@ function App() {
   }, [token]);
 
   useEffect(() => {
-    console.log('Token:', token); // Лог токена
+    // console.log('Token:', token); // Лог токена
   }, [token]);
 
 
   useEffect(() => {
+    
     if (!chatId) {
-      console.warn('chatId не определен');
+      console.warn('chatId в объявлении websocket-a на клиенте не определен');
       return;
     }
   
@@ -85,6 +86,16 @@ function App() {
     socket.onopen = () => {
       console.log('Подключен к WebSocket');
     };
+
+    socket.on('messageStatusUpdated', (data) => {
+      console.log('Получено событие messageStatusUpdated:', data);
+    
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.chatId === data.chatId ? { ...msg, isRead: true } : msg
+        )
+      );
+    });
   
     socket.onmessage = (event) => {
       try {
@@ -130,7 +141,7 @@ function App() {
 
 
   return (
-    <div>
+    <NotificationProvider>
       
         {/* //TODO:  
          <notificationFunction />
@@ -152,7 +163,7 @@ function App() {
         <ToastContainer />
       
 
-    </div>
+    </NotificationProvider>
   );
 }
 

@@ -21,9 +21,9 @@ app.use(express.json());
 
 // Маршруты API
 app.use('/api/auth', authRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/messages', messageRoutes);
-app.use('/api/notifications', notificationRoutes);
 app.use('/api/user', userRoutes);
 
 // Инициализация WebSocket

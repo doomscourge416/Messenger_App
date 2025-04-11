@@ -13,6 +13,8 @@ const isTokenBlacklisted = async (token) => {
 };
 
 module.exports = async (req, res, next) => {
+  console.log('Выполняется authMiddleware:', req.body);
+  
   try {
     const authHeader = req.headers.authorization;
 

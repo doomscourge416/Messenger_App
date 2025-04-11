@@ -18,7 +18,7 @@ module.exports = (server, app) => {
 
     ws.chatId = chatId; // Сохраняем ID чата для клиента
     console.log(`Клиент подключился к чату ${chatId}`);
-
+    
     ws.on('message', (message) => {
       console.log(`Получено сообщение от клиента: ${message}`);
       wss.clients.forEach((client) => {

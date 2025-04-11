@@ -100,6 +100,12 @@ const ChatList = ({ token }) => {
     }
   };
 
+  useEffect(() => {
+    if (!selectedChatId && chats.length > 0) {
+      setSelectedChatId(chats[0].id);
+    }
+  }, [chats, selectedChatId]);
+
 
   return (
     <div>
@@ -108,7 +114,9 @@ const ChatList = ({ token }) => {
         <ul className="chat-list">
           {chats.length > 0 ? (
             chats.map((chat) => (
-              <li key={chat.id} className="chat-item">
+              <li key={chat.id}
+              onClick={()=> setSelectedChatId(chatId)}
+              className="chat-item">
                 <Link to={`/chat/${chat.id}`}>
 
                   <strong>{chat.type === 'private' ? 'Личный чат' : 'Групповой чат'}</strong>

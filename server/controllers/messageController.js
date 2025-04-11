@@ -1,4 +1,6 @@
-const { Chat, Message, User, ForwardedMessages, ChatParticipant, Op } = require('../db');
+const { Chat, Message, User, ForwardedMessages, ChatParticipant } = require('../db');
+const { Op } = require('sequelize');
+
 const isUserBanned = async (chatId, userId) => {
   if (!chatId || !userId) {
     console.error('Недостаточно данных для проверки бана:', { chatId, userId });
@@ -91,6 +93,7 @@ exports.getMessagesByChat = async (req, res) => {
     const userId = req.userId;
 
 
+
     if (!userId) {
       return res.status(401).json({ message: 'Необходима авторизация' });
     }
@@ -136,17 +139,28 @@ exports.getMessagesByChat = async (req, res) => {
 
 // Пометка сообщений как прочитанных
 exports.markAsRead = async (req, res) => {
+
   try {
+
     const { chatId } = req.body;
     const userId = req.userId;
+
+
+    console.log('Помечаем сообщения как прочитанные:', { chatId, userId });
 
     if (!chatId) {
       return res.status(400).json({ message: 'Необходимо указать chatId' });
     }
 
-    // Помечаем все сообщения чата как прочитанные для текущего пользователя
-    await Message.update(
-      { isRead: true }, // Обновляем поле isRead
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('messageStatusUpdated', { chatId });
+    }
+
+
+    // Обновляем только сообщения, отправленные другими участниками
+    const updatedCount = await Message.update(
+      { isRead: 1 },
       {
         where: {
           chatId,
@@ -154,6 +168,12 @@ exports.markAsRead = async (req, res) => {
         },
       }
     );
+
+    console.log('Обновлено сообщений:', updatedCount);
+
+    if (updatedCount === 0) {
+      console.warn('Нет подходящих сообщений для обновления');
+    }
 
     res.json({ message: 'Сообщения успешно помечены как прочитанные' });
   } catch (error) {

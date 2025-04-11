@@ -1,3 +1,5 @@
+let isWebSocketInitialized = false;
+
 class WebSocketService {
   constructor(chatId, onMessageCallback) {
     this.chatId = chatId;
@@ -54,6 +56,8 @@ class WebSocketService {
       })
     );
   }
+
+  isWebSocketInitialized = true;
 
   disconnect() {
     if (this.socket) {

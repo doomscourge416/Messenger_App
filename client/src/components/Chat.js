@@ -10,9 +10,9 @@ import '../Chat.css';
 
 
 const Chat = () => {
+
   const { chatId } = useParams();
   // console.log('Текущий чат ID: ', chatId);
-
   const token = localStorage.getItem('messengerToken');
 
   const [messages, setMessages] = useState([]);
@@ -25,31 +25,31 @@ const Chat = () => {
   const [adminUser, setAdminUser] = useState(null);
   const [isAddParticipantModalOpen, setIsAddParticipantModalOpen] = useState(false);
   const [newParticipantEmail, setNewParticipantEmail] = useState('');
-  const [isMuted, setIsMuted] = useState(false);
+  // const [isMuted, setIsMuted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(null);
   const [expandedMessages, setExpandedMessages] = useState([]);
   const [activeParticipants, setActiveParticipants] = useState([]);
   const [bannedParticipants, setBannedParticipants] = useState([]);
   // const [forwardedHistory, setForwardedHistory] = useState([]);
 
-  const { playNotificationSound, showNotificationPopup } = useNotification();
+  const { isMuted, setIsMuted, playNotificationSound, showNotificationPopup } = useNotification();
 
 
   const fetchParticipants = async () => {
 
     if (!chatId) {
-      console.warn('chatId не определен');
+      console.warn('chatId в fetchParticipants не определен');
       return;
     }
     
     try {
-      console.log('fetchParticipants начал выполнение');
+      // console.log('fetchParticipants начал выполнение');
   
       const response = await axios.get(`/api/chats/participants/${chatId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      console.log('Ответ сервера от fetchParticipants:', response.data);
+      // console.log('Ответ сервера от fetchParticipants:', response.data);
   
       if (response.data && Array.isArray(response.data.participants)) {
         setParticipants(response.data.participants);
@@ -72,16 +72,39 @@ const Chat = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchNotificationSettings = async () => {
+      try {
+        console.log('Загрузка настроек уведомлений для chatId:', chatId);
+        // if (!chatId) {
+        //   console.warn('chatId не определен');
+        //   return;
+        // }
+        const response = await axios.get(`/api/notifications/${chatId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Ответ сервера (настройки уведомлений):', response.data);
+        setIsMuted(response.data.isMuted); // Устанавливаем состояние isMuted
+        console.log('Текущее значение isMuted после загрузки:', response.data.isMuted);
+      } catch (error) {
+        console.error('Ошибка при получении настроек уведомлений:', error.response?.data || error.message);
+      }
+    };
+  
+    fetchNotificationSettings();
+  }, [chatId, token, setIsMuted]);
+
 
 
   // Эффект для загрузки данных при изменении chatId
   useEffect(() => {
+    
     if (!chatId) {
-      console.warn('chatId не определен');
+      console.warn('chatId в useEffect загрузки данных при изменении chatId не определен');
       return;
     }
 
-    console.log('useEffect вызвал fetchParticipants для chatId:', chatId);
+    // console.log('useEffect вызвал fetchParticipants для chatId:', chatId);
     fetchParticipants();
   }, [chatId]);
 
@@ -100,29 +123,49 @@ const Chat = () => {
     }
   };
 
-  let isWebSocketInitialized = false;
+  
 
+  
+  let isWebSocketInitialized = false;
   useEffect(() => {
-    if (!chatId || isWebSocketInitialized) {
-      console.warn('chatId не определен или WebSocket уже инициализирован');
+    if (isWebSocketInitialized) {
+      console.warn(' WebSocket уже инициализирован');
       return;
     }
 
     // Создаем экземпляр WebSocket
     const websocket = new WebSocketService(chatId, (data) => {
       if (data.type === 'newMessage') {
+        
         setMessages((prev) => [...prev, data]);
+        
+        playNotificationSound(); // Воспроизводим звук уведомления
+        showNotificationPopup(data); // Показываем всплывающее окно
+        
+        
+        // TODO: Change back after data.type === 'newMessage' if anything breaks
+        // setMessages((prev) => [...prev, data]);
 
-        if (!isMuted) {
-          playNotificationSound();
-          showNotificationPopup(data);
-        }
+        // if (!isMuted) {
+        //   playNotificationSound();
+        //   showNotificationPopup(data);
+        // }
+
       }
+
     });
 
     // Подключаемся и передаем коллбэк для обработки сообщений
     websocket.connect((data) => {
       console.log('Получено событие WebSocket:', data);
+
+      // TODO: это повтор того, что написано ниже
+
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.chatId === data.chatId ? { ...msg, isRead: true } : msg
+        )
+      );
       
       if (data.type === 'newMessage') {
 
@@ -137,43 +180,59 @@ const Chat = () => {
       } else if (data.type === 'deleteMessage') {
 
         setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== data.id));
+
+      } else if (data.type === 'messageStatusUpdated') {
+        console.log('Получено событие messageStatusUpdated:', data);
+
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.chatId === data.chatId ? { ...msg, isRead: true } : msg
+          )
+        );
+
       }
     });
 
-      // Отмечаем, что WebSocket инициализирован
-  isWebSocketInitialized = true;
+    // Отмечаем, что WebSocket инициализирован
+    isWebSocketInitialized = true;
 
     return () => {
       websocket.disconnect();
     };
-  }, [chatId]);
-  
-  // Получение настроек уведомлений
-  useEffect(() => {
-    const fetchNotificationSettings = async () => {
-      try {
-        const response = await axios.get(`/api/notifications/${chatId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setIsMuted(response.data.isMuted);
-      } catch (error) {
-        console.error('Ошибка при получении настроек уведомлений:', error.response?.data || error.message);
-      }
-    };
 
-    fetchNotificationSettings();
-  }, [chatId, token]);
+  }, [chatId]);  
+ 
+
+ 
+  const handleMute = async () => {
+    try {
+      const response = await axios.post(
+        '/api/notifications/mute',
+        { chatId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setIsMuted(response.data.isMuted); // Обновляем состояние isMuted
+      console.log('setIsMuted теперь ', response.data.isMuted)
+      alert('Настройки уведомлений обновлены!');
+      
+    } catch (error) {
+      console.error('Ошибка при управлении уведомлениями:', error.response?.data || error.message);
+    }
+    
+  };
+
+
 
 
   // Получение истории сообщений
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        console.log('Загружаю сообщения для чата:', chatId);
+        // console.log('Загружаю сообщения для чата:', chatId);
         const response = await axios.get(`/api/messages/chat/${chatId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log('Сообщения:', response.data.messages);
+        // console.log('Сообщения:', response.data.messages);
         setMessages(response.data.messages); // Устанавливаем сообщения в состояние
         setIsBanned(response.data.isBanned); // Обновляем статус бана
       } catch (error) {
@@ -189,6 +248,7 @@ const Chat = () => {
     if (chatId) {
       fetchMessages();
     }
+    // console.log('useEffect для fetchMessages выполнен');
   }, [chatId, token]);
 
 
@@ -270,23 +330,7 @@ const Chat = () => {
     }
   };
 
-  // Мутинг чата
-  const handleMute = async () => {
-    try {
-      await axios.post(
-        '/api/notifications/mute',
-        { chatId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setIsMuted((prev) => !prev); // Переключаем статус mute
-      alert('Настройки уведомлений обновлены!');
-    } catch (error) {
-      console.error('Ошибка при управлении уведомлениями:', error.response?.data || error.message);
-    }
-  };
-
-
-
+  useEffect(() => {
   const fetchChatDetails = async () => {
     try {
       // Запрашиваем данные чата
@@ -309,10 +353,13 @@ const Chat = () => {
   };
 
 
-  useEffect(() => {
+  
     if (chatId) {
       fetchChatDetails();
     }
+
+    // console.log('useEffect для fetchChatDetails выполнен');
+
   }, [chatId, token]);
 
 
@@ -368,7 +415,7 @@ const Chat = () => {
 
 
   useEffect(() => {
-    console.log('Текущее значение isAdmin:', isAdmin);
+    // console.log('Текущее значение isAdmin:', isAdmin);
   }, [isAdmin]);
 
 
@@ -494,8 +541,29 @@ const Chat = () => {
     }
   };
 
-  
+  useEffect(() => {
+    const markMessagesAsRead = async () => {
 
+      console.log('chatId на момент выполнения useEffect(markMessagesAsRead)', chatId);
+
+      if (!chatId) {
+        console.warn('chatId в начале markMessagesAsRead не определён');
+        return;
+      };
+
+      try {
+        console.log('Отправляем запрос на пометку сообщений как прочитанных:', { chatId });
+        await axios.post('/api/messages/mark-as-read', { chatId }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Сообщения успешно помечены как прочитанные');
+      } catch (error) {
+        console.error('Ошибка при пометке сообщений:', error.response?.data || error.message);
+      }
+    };
+  
+    markMessagesAsRead();
+  }, [chatId, token]);
 
   return (
     
@@ -529,6 +597,9 @@ const Chat = () => {
               <p className={`message-content ${expandedMessages.includes(message.id) ? 'expanded' : ''}`}>
                 {message.content}
               </p>
+              <span className={`read-status ${message.isRead ? 'read' : 'unread'}`}>
+                {message.isRead ? '✓ Прочитано' : '✗ Не прочитано'}
+              </span>
               {message.content.length > 100 && !expandedMessages.includes(message.id) && (
                 <button className="expand-button" onClick={() => toggleExpand(message.id)}>
                   Развернуть
@@ -630,77 +701,51 @@ const Chat = () => {
         <p>Администратор не найден</p>
       )}
 
-        <h3>Участники:</h3>
-        {participants.length > 0 ? (
-          <ul>
-            {participants.map((participant) => (
-              <li key={participant.id}>
+      {participants.length > 0 ? (
+        <ul>
+          <div class="participants-section-footer">
 
+            {/* TODO: */} 
+            {/* <button onClick={handleAddParticipant}>Добавить участника</button> */}
 
-              <img
-                src={participant.avatarUrl || '/default-avatar.png'}
-                alt={`${participant.nickname}'s avatar`}
-                className="round-img"
-              />
+            {/* Кнопка открытия модального окна */}
+            <button onClick={handleOpenAddParticipantModal}>Добавить участника</button>
 
-
-                {participant.nickname}
-
-
-                {isAdmin && !participant.isBanned && (
-                  <>
-                    <button onClick={() => handleBanParticipant(participant.id)}>Заблокировать</button>
-                    <button onClick={() => handleRemoveParticipant(participant.id)}>Удалить</button>
-                  </>
-                )}
-                {isAdmin && participant.isBanned && (
-                  <button onClick={() => handleUnbanParticipant(participant.id)}>Разбанить</button>
-                )}
-              </li>
-            ))}
-
-            <div class="participants-section-footer">
-
-              {/* TODO: */} 
-              {/* <button onClick={handleAddParticipant}>Добавить участника</button> */}
-
-              {/* Кнопка открытия модального окна */}
-              <button onClick={handleOpenAddParticipantModal}>Добавить участника</button>
-
-              {/* Модальное окно */}
-              {isAddParticipantModalOpen && (
-                <div className="modal">
-                  <div className="modal-content">
-                    <span className="close" onClick={handleCloseAddParticipantModal}>&times;</span>
-                    <h2>Добавить участника</h2>
-                    <form onSubmit={handleAddParticipantSubmit}>
-                      <input
-                        type="email"
-                        value={newParticipantEmail}
-                        onChange={(e) => setNewParticipantEmail(e.target.value)}
-                        placeholder="Введите email участника"
-                        required
-                      />
-                      <button type="submit">Добавить</button>
-                    </form>
-                  </div>
+            {/* Модальное окно */}
+            {isAddParticipantModalOpen && (
+              <div className="modal">
+                <div className="modal-content">
+                  <span className="close" onClick={handleCloseAddParticipantModal}>&times;</span>
+                  <h2>Добавить участника</h2>
+                  <form onSubmit={handleAddParticipantSubmit}>
+                    <input
+                      type="email"
+                      value={newParticipantEmail}
+                      onChange={(e) => setNewParticipantEmail(e.target.value)}
+                      placeholder="Введите email участника"
+                      required
+                    />
+                    <button type="submit">Добавить</button>
+                  </form>
                 </div>
-              )}
+              </div>
+            )}
 
-              <button onClick={handleTransferAdmin}>Передать права администратора</button>
+            <button onClick={handleTransferAdmin}>Передать права администратора</button>
 
-            </div>
-
-          </ul>
-        ) : (
-          <p>Нет участников в этом чате.</p>
-        )}
+          </div>
+        </ul>
+      ) : (
+        <p>Нет участников в этом чате.</p>
+      )}
         
-      </div>
+        
+
+    </div> 
 
 
-            {/* Форма поиска */}
-            <form onSubmit={handleSearchUsers} className="search-form">
+      {/* Форма поиска */}
+      <form onSubmit={handleSearchUsers} className="search-form">
         <input
           type="text"
           value={searchQuery}

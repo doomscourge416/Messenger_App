@@ -7,6 +7,6 @@ const authMiddleware = require('../middlewares/authMiddleware');
 router.post('/mute', authMiddleware, notificationController.toggleMuteChat);
 
 // Получение настроек уведомлений для чата
-router.get('/:chatId', authMiddleware, notificationController.getNotificationSettings); // Строка 18
+router.get('/notifications/:chatId', authMiddleware, notificationController.getNotificationSettings); // Строка 18
 
 module.exports = router;
