@@ -23,6 +23,7 @@ const Chat = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [isAddParticipantModalOpen, setIsAddParticipantModalOpen] = useState(false);
   const [newParticipantEmail, setNewParticipantEmail] = useState('');
   // const [isMuted, setIsMuted] = useState(false);
@@ -251,6 +252,13 @@ const Chat = () => {
     // console.log('useEffect для fetchMessages выполнен');
   }, [chatId, token]);
 
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file); // Сохраняем выбранный файл в состоянии
+    }
+  };
+
 
   // Отправка сообщения через API
   const handleSubmit = async (e) => {
@@ -262,12 +270,22 @@ const Chat = () => {
     }
 
     try {
+
+      const formData = new FormData();
+      formData.append('chatId', chatId);
+      formData.append('content', content);
+
+      if (selectedFile) {
+        formData.append('file', selectedFile); // Добавляем файл, если он выбран
+      }
+
       await axios.post(
         '/api/messages/send',
         { chatId, content },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setContent(''); // Очищаем поле ввода
+      setSelectedFile(null);
     } catch (error) {
       console.error('Ошибка при отправке сообщения:', error.response?.data || error.message);
     }
@@ -564,7 +582,57 @@ const Chat = () => {
   
     markMessagesAsRead();
   }, [chatId, token]);
+  
 
+  const handleFileUpload = async (event) => {
+
+    const file = event.target.files[0];
+    if(!file) return;
+    console.log('Выбранный файл:', file);
+
+    try {
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      console.log('Отправляемый FormData:', formData);
+
+      const response = await axios.post('/api/messages/send', formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          'Content-Type': 'multipart/form-data'
+        },
+      });
+
+      console.log('Файл успешно загружен:', response.data.fileUrl);
+      alert('Файл успешно загружен!');
+
+    } catch (error) {
+
+      console.error('Ошибка при загрузке файла: ', error.response?.data || error.message);
+      console.error('Полная ошибка:', error);
+      alert('Не удалось загрузить файл, Ошибка: ', error );
+
+    }
+
+  };
+
+  useEffect(() => {
+
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput){
+      fileInput.addEventListener('change', handleFileUpload);
+    };
+
+    return () => {
+      if (fileInput){
+        fileInput.removeEventListener('change', handleFileUpload);
+      }
+    }
+
+  }, []);
+
+  
   return (
     
     
@@ -637,13 +705,23 @@ const Chat = () => {
 
       {/* Форма отправки сообщений */}
       <form onSubmit={handleSubmit} className="input-form">
-        <input
-          type="text"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Введите сообщение..."
-        />
-        <button type="submit">Отправить</button>
+
+
+          <input
+            type="text"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Введите сообщение..."
+          />
+
+          <input type="file" id="fileInput" onChange={handleFileSelect} style={{ display: 'none' }} />
+
+          <label htmlFor="fileInput" className="file-upload-button">  
+            <img src="/fileInput-icon.png" alt="Upload File" />
+          </label>
+          <button type="submit">Отправить</button>
+
+
       </form>
 
 

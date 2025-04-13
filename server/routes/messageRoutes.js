@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const messageController = require('../controllers/messageController');
 const authMiddleware = require('../middlewares/authMiddleware');
+const uploadMiddleware = require('../middlewares/uploadMiddleware');
+// const { upload } = require('../middlewares/uploadMiddleware');
 
 // Отправка сообщения
 router.post('/send', authMiddleware, messageController.sendMessage);
@@ -21,11 +23,14 @@ router.delete('/delete/:messageId', authMiddleware, messageController.deleteMess
 // Пересылка сообщения
 router.post('/forward', authMiddleware, messageController.forwardMessage);
 
-// TODO: Какой из двухвариантов верный? 
-// Получение пересланных сообщений
-// router.get('/forwarded/:chatId', authMiddleware, messageController.getForwardedMessages);
+// Загрузка файлов
+router.post('/send', uploadMiddleware.single('file'), messageController.uploadFile);
 
+// TODO: Позже выяснить какой из двух вариантов необходим 
 // Получение истории пересылок
 router.get('/forwarded/:messageId', authMiddleware, messageController.getForwardedMessages);
+
+// Получение пересланных сообщений
+// router.get('/forwarded/:chatId', authMiddleware, messageController.getForwardedMessages);
 
 module.exports = router;

@@ -93,6 +93,38 @@
   background-color: #b8860b; /* Темный оттенок золота */
 }
 
+/* .input-group {
+  display: flex;
+  align-items: center;
+} */
+
+.file-upload-button{
+  
+  max-height: 27px;
+  cursor: pointer;
+  display: inline-block;
+  padding: 7px 0px 5px 0px;
+  /* background-color: #007bff; */
+  color: white;
+  border: none;
+  border-radius: 5px;
+
+}
+
+.file-upload-button::before {
+  
+  content: '';
+  /* display: inline-block; */
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  /* background-color: #007bff; */
+  color: white;
+  border-radius: 50%;
+  margin-right: 5px;
+
+}
+
 .input-form {
   display: flex;
   gap: 10px;

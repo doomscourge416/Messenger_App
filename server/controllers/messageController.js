@@ -46,9 +46,20 @@ exports.sendMessage = async (req, res) => {
 
     console.log('Пользователь является участником чата');
 
+
+    let fileUrl = null;
+    if (req.file) {
+      fileUrl = `/uploads/${req.file.filename}`; // URL загруженного файла
+    }
+
+    if (!content && !fileUrl) {
+      return res.status(400).json({ message: 'Сообщение должно содержать текст или файл' });
+    }
+
     // Создаем новое сообщение
     const message = await Message.create({
-      content,
+      content: content || null,
+      fileUrl: fileUrl || null,
       senderId: userId,
       chatId,
     });
@@ -68,6 +79,7 @@ exports.sendMessage = async (req, res) => {
               type: 'newMessage',
               id: message.id,
               content: message.content,
+              fileUrl: message.fileUrl,
               senderId: message.senderId,
               chatId: message.chatId,
               createdAt: message.createdAt.toLocaleString(),
@@ -341,6 +353,38 @@ exports.forwardMessage = async (req, res) => {
     console.error('Ошибка при пересылке сообщения:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
+};
+
+// Отправление файлов
+exports.uploadFile = async (req, res) => {
+
+  try {
+
+    console.log('Запрос на загрузку файла получен');
+    console.log('req.file:', req.file);
+
+    if(!req.file){
+      return res.status(400).json({ message: 'Файл не был загружен'});
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`; 
+    console.log('URL загруженного файла:', fileUrl);
+
+    await Message.create({
+      senderId: req.userId,
+      chatId: req.body.chatId,
+      fileUrl: fileUrl,
+    });
+
+    res.json({ message: 'Файл успешно загружен', fileUrl });
+
+  } catch (error) {
+
+    console.error('Ошибка при загрузке файла: ', error);
+    res.status(500).json({ message: 'Ошибка сервера при загрузке файла' });
+
+  }
+
 };
 
 // Получение истории пересылок
