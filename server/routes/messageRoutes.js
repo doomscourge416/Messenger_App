@@ -6,7 +6,7 @@ const uploadMiddleware = require('../middlewares/uploadMiddleware');
 // const { upload } = require('../middlewares/uploadMiddleware');
 
 // Отправка сообщения
-router.post('/send', authMiddleware, messageController.sendMessage);
+router.post('/send', uploadMiddleware.single('file'), authMiddleware, messageController.sendMessage);
 
 // Получение сообщений по ID чата
 router.get(`/chat/:chatId`, authMiddleware, messageController.getMessagesByChat);
@@ -24,7 +24,7 @@ router.delete('/delete/:messageId', authMiddleware, messageController.deleteMess
 router.post('/forward', authMiddleware, messageController.forwardMessage);
 
 // Загрузка файлов
-router.post('/send', uploadMiddleware.single('file'), messageController.uploadFile);
+// router.post('/send', uploadMiddleware.single('file'), messageController.uploadFile);
 
 // TODO: Позже выяснить какой из двух вариантов необходим 
 // Получение истории пересылок

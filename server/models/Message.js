@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       content: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
       },
       senderId: {
         type: DataTypes.INTEGER,

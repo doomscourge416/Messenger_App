@@ -11,7 +11,7 @@ module.exports = {
       },
       content: {
         type: Sequelize.TEXT,
-        allowNull: false,
+        allowNull: true,
       },
       senderId: {
         type: Sequelize.INTEGER,

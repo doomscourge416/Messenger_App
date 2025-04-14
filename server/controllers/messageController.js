@@ -22,9 +22,9 @@ exports.sendMessage = async (req, res) => {
     const { chatId, content } = req.body;
     const userId = req.userId;
 
-    if (!chatId || !content) {
-      return res.status(400).json({ message: 'Необходимо указать chatId и content' });
-    }
+    // if (!chatId || !content) {
+    //   return res.status(400).json({ message: 'Необходимо указать chatId и content' });
+    // }
 
     // Проверяем, забанен ли пользователь
     const isBanned = await isUserBanned(chatId, userId);

@@ -281,7 +281,7 @@ const Chat = () => {
 
       await axios.post(
         '/api/messages/send',
-        { chatId, content },
+        formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setContent(''); // Очищаем поле ввода
@@ -617,20 +617,20 @@ const Chat = () => {
 
   };
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput){
-      fileInput.addEventListener('change', handleFileUpload);
-    };
+  //   const fileInput = document.getElementById('fileInput');
+  //   if (fileInput){
+  //     fileInput.addEventListener('change', handleFileUpload);
+  //   };
 
-    return () => {
-      if (fileInput){
-        fileInput.removeEventListener('change', handleFileUpload);
-      }
-    }
+  //   return () => {
+  //     if (fileInput){
+  //       fileInput.removeEventListener('change', handleFileUpload);
+  //     }
+  //   }
 
-  }, []);
+  // }, []);
 
   
   return (
@@ -656,19 +656,30 @@ const Chat = () => {
         ) : messages.length > 0 ? (
           messages.map((message) => (
             <li key={message.id} className="message-item">
+
               <img
                 src={message.sender.avatarUrl || '/default-avatar.png'}
                 alt={`${message.sender.nickname}'s avatar`}
                 className="round-img"
               />
+
               <span className="nickname">{truncateNickname(message.sender.nickname)} : </span>
-              <p className={`message-content ${expandedMessages.includes(message.id) ? 'expanded' : ''}`}>
-                {message.content}
-              </p>
+              {message.content ? (
+                <p className={`message-content ${expandedMessages.includes(message.id) ? 'expanded' : ''}`}>
+                  {message.content}
+                </p>
+              ) : (
+                <p className="message-content">[Файл]</p>
+              )}
+              {!message.content && message.fileUrl && (
+                <a href={message.fileUrl} className="file-link" target="_blank" rel="noopener noreferrer">
+                  [Скачать файл]
+                </a>
+              )}
               <span className={`read-status ${message.isRead ? 'read' : 'unread'}`}>
                 {message.isRead ? '✓ Прочитано' : '✗ Не прочитано'}
               </span>
-              {message.content.length > 100 && !expandedMessages.includes(message.id) && (
+              {message.content && message.content.length > 100 && !expandedMessages.includes(message.id) && (
                 <button className="expand-button" onClick={() => toggleExpand(message.id)}>
                   Развернуть
                 </button>
@@ -678,6 +689,8 @@ const Chat = () => {
                   Свернуть
                 </button>
               )}
+
+
               {/* Кнопка для открытия меню */}
               <button
                 className="message-actions-button"
