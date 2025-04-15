@@ -617,20 +617,39 @@ const Chat = () => {
 
   };
 
-  // useEffect(() => {
+  const getFileNameFromUrl = (fileUrl) => {
+    if (!fileUrl) return ''; // Если fileUrl отсутствует
+  
+    const fileName = fileUrl.split('.').pop(); // Получаем последний элемент пути
+    return `.${fileName}`;
+  };
 
-  //   const fileInput = document.getElementById('fileInput');
-  //   if (fileInput){
-  //     fileInput.addEventListener('change', handleFileUpload);
-  //   };
+  const getFileTypeIcon = (fileName) => {
+    console.log('fileName:', fileName);
+    if (!fileName) return '📁'; // Иконка для неизвестных файлов
+  
+    const extension = fileName.split('.').pop().toLowerCase();
 
-  //   return () => {
-  //     if (fileInput){
-  //       fileInput.removeEventListener('change', handleFileUpload);
-  //     }
-  //   }
-
-  // }, []);
+    console.log('splited file name is : ', extension);
+  
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return '🖼️'; // Иконка для изображений
+      case 'pdf':
+        return '📄'; // Иконка для PDF
+      case 'txt':
+        return '📝'; // Иконка для текстовых файлов
+      case 'zip':
+      case 'rar':
+      case '7z':
+        return '🗜️'; // Иконка для архивов
+      default:
+        return '📁'; // Иконка для остальных файлов
+    }
+  };
 
   
   return (
@@ -664,18 +683,28 @@ const Chat = () => {
               />
 
               <span className="nickname">{truncateNickname(message.sender.nickname)} : </span>
-              {message.content ? (
+
+              {/* Текстовое содержимое */}
+              {message.content && (
                 <p className={`message-content ${expandedMessages.includes(message.id) ? 'expanded' : ''}`}>
                   {message.content}
                 </p>
-              ) : (
-                <p className="message-content">[Файл]</p>
               )}
-              {!message.content && message.fileUrl && (
-                <a href={message.fileUrl} className="file-link" target="_blank" rel="noopener noreferrer">
-                  [Скачать файл]
-                </a>
+
+              {/* Файл */}
+              {message.fileUrl && (
+                <div className="file-preview">
+                  {/* Иконка файла */}
+                  <span className="file-icon">
+                    {getFileTypeIcon(message.fileUrl)}
+                  </span>
+                  {/* Название файла */}
+                  <a href={message.fileUrl} download className="file-link" target="_blank" rel="noopener noreferrer">
+                    {getFileNameFromUrl(message.fileUrl) || 'Скачать файл'}
+                  </a>
+                </div>
               )}
+
               <span className={`read-status ${message.isRead ? 'read' : 'unread'}`}>
                 {message.isRead ? '✓ Прочитано' : '✗ Не прочитано'}
               </span>
@@ -729,9 +758,18 @@ const Chat = () => {
 
           <input type="file" id="fileInput" onChange={handleFileSelect} style={{ display: 'none' }} />
 
-          <label htmlFor="fileInput" className="file-upload-button">  
-            <img src="/fileInput-icon.png" alt="Upload File" />
+          <label 
+            htmlFor="fileInput" 
+            className={`file-upload-button ${selectedFile ? 'file-selected' : ''}`}
+          >  
+            {selectedFile ? (
+              <img src="/check-icon.ico" alt="File Selected" /> // Иконка "галочка"
+            ) : (
+              <img src="/fileInput-icon.png" alt="Upload File" /> // Иконка "скрепка"
+            )}
+
           </label>
+          
           <button type="submit">Отправить</button>
 
 
