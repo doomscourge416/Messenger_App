@@ -134,7 +134,7 @@ exports.getMessagesByChat = async (req, res) => {
         {
           model: User,
           as: 'sender',
-          attributes: ['id', 'nickname'],
+          attributes: ['id', 'nickname', 'avatarUrl'],
         },
       ],
       order: [['createdAt', 'ASC']], // Сортируем сообщения по времени

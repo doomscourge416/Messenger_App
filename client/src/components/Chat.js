@@ -673,7 +673,10 @@ const Chat = () => {
         {isBanned ? (
           <p>Вы забанены в этом чате</p>
         ) : messages.length > 0 ? (
-          messages.map((message) => (
+          
+          messages.map((message) => {
+            console.log('Message sender:', message.sender);
+            return (
             <li key={message.id} className="message-item">
 
               <img
@@ -738,7 +741,7 @@ const Chat = () => {
                 </div>
               )}
             </li>
-          ))
+          )})
         ) : (
           <p>Нет сообщений.</p>
         )}
