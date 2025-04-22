@@ -1,4 +1,6 @@
 const { Op } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
 const { User } = require('../db');
 
 
@@ -68,27 +70,45 @@ exports.updateNickname = async (req, res) => {
 
 // Обновление аватара
 exports.updateAvatar = async (req, res) => {
-    try {
-      const { avatarUrl } = req.body;
-      const userId = req.userId;
-  
-      if (!avatarUrl) {
-        return res.status(400).json({ message: 'Необходимо указать avatarUrl' });
-      }
-  
-      const user = await User.findByPk(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'Пользователь не найден' });
-      }
-  
-      user.avatarUrl = avatarUrl;
-      await user.save();
-  
-      res.json({ message: 'Аватар успешно обновлен', user });
-    } catch (error) {
-      console.error('Ошибка при обновлении аватара:', error);
-      res.status(500).json({ message: 'Ошибка сервера' });
+  try {
+    const userId = req.userId; // ID текущего пользователя из токена
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ message: 'Файл не загружен' });
     }
+
+    const user = await User.findByPk(userId);
+    if(!user){
+      return res.status(404).json({ message: 'Пользователь не найден.' });
+    }
+
+    if(user.avatarUrl){
+      const oldFilePath = path.resolve(process.cwd(), 'uploads', 'avatars', path.basename(user.avatarUrl));
+      if (fs.existsSync(oldFilePath)){
+        fs.unlinkSync(oldFilePath);  // Удаляем старый файл
+      }
+    }
+
+    const fileName = `${Date.now()}-${file.originalname}`;
+    const filePath = path.resolve(process.cwd(), 'uploads', 'avatars', fileName);
+
+    console.log('Сгенерированный путь к файлу:', filePath);
+
+    // Перемещаем файл в нужную папку
+    await fs.promises.rename(file.path, filePath);
+
+    // Обновляем запись пользователя в базе данных
+    await User.update(
+      { avatarUrl: `/uploads/avatars/${fileName}` },
+      { where: { id: userId } }
+    );
+
+    res.json({ message: 'Аватар успешно обновлен', avatarUrl: `/uploads/avatars/${fileName}` });
+  } catch (error) {
+    console.error('Ошибка при загрузке аватара:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
 };
 
 // Настройка видимости email

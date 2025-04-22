@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const initializeWebSocket = require('./websocket');
+const path = require('path');
 
 // Подключение маршрутов
 const authRoutes = require('./routes/authRoutes');
@@ -14,7 +15,12 @@ const app = express();
 const server = http.createServer(app);
 
 // Middleware для CORS
-app.use(cors({ origin: 'http://localhost:3000' })); // Разрешаем доступ с клиента
+app.use(cors({ 
+  origin: 'http://localhost:3000',
+  credentials: true,
+})); // Разрешаем доступ с клиента
+
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')) );
 
 // Middleware для парсинга JSON
 app.use(express.json());

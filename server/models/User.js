@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       avatarUrl: {
         type: DataTypes.STRING,
+        allowNull: true,
       },
       isEmailVisible: {
         type: DataTypes.BOOLEAN,

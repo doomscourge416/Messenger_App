@@ -5,6 +5,8 @@ const Profile = ({ token }) => {
   const [user, setUser] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [emailVisibility, setEmailVisibility] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null); 
 
   // Состояние формы изменения пароля
   const [oldPassword, setOldPassword] = useState('');
@@ -30,27 +32,101 @@ const Profile = ({ token }) => {
     fetchUser();
   }, [token]);
 
-  // Метод для изменения аватара
-  const handleUpdateAvatar = async () => {
-    try {
-      const newAvatarUrl = prompt('Введите URL аватара:');
-      if (!newAvatarUrl) return;
-
-      await axios.put(
-        '/api/user/avatar',
-        { avatarUrl: newAvatarUrl },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      alert('Аватар успешно обновлен!');
-      setUser((prevUser) => prevUser && { ...prevUser, avatarUrl: newAvatarUrl });
-    } catch (error) {
-      console.error('Ошибка при обновлении аватара:', error.response?.data || error.message);
-      alert('Не удалось обновить аватар.');
+  // Обработчик выбора файла
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if(file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
+
+  const handleSubmitAvatar = async (event) => {
+    event.preventDefault();
+
+    if(!selectedFile){
+      alert('Выберите файл для загрузки.');
+      return
+    }
+
+    if (selectedFile.size > 2 * 1024 * 1024) {
+      alert("Размер файла не должен превышать 2 МБ.");
+      return;
+    }
+
+    try {
+
+      const formData = new FormData();
+      formData.append('avatar', selectedFile);
+
+      const response = await axios.put("/api/user/avatar", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data", 
+        },
+      })
+
+      alert("Аватар успешно обновлён.");
+      setUser((prevUser) => prevUser && {...prevUser, avatarUrl: response.data.avatarUrl });
+
+    } catch(error) {
+
+      console.error("Ошибка при обновлении аватара:", error.response?.data || error.message);
+      alert('Не удалось обновить аватар.');
+
+    }
+  };
+
+
+
+  //TODO: Метод для изменения аватара
+  // const handleUpdateAvatar = async (event) => {
+  //   try {
+  //     const file = event.target.files[0];
+  //     if (!file) return;
+
+  //     console.log('File в handleUpdateAvatar:', file);
+  
+  //     const formData = new FormData();
+  //     formData.append('avatar', file); // Ключ должен совпадать с ключом, который ожидает multer
+  
+
+  //     const response = await axios.put('/api/user/avatar', formData, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         'Content-Type': 'multipart/form-data',
+  //       },
+  //     });
+  
+  //     alert('Аватар успешно обновлен!');
+  //     setUser((prevUser) => prevUser && { ...prevUser, avatarUrl: response.data.avatarUrl });
+  //   } catch (error) {
+  //     console.error('Ошибка при обновлении аватара:', error.response?.data || error.message);
+  //     alert('Не удалось обновить аватар.');
+  //   }
+    
+    
+    
+    // TODO: Прошлая реализация handleUpdateAvatar
+    // try {
+    //   const newAvatarUrl = prompt('Введите URL аватара:');
+    //   if (!newAvatarUrl) return;
+
+    //   await axios.put(
+    //     '/api/user/avatar',
+    //     { avatarUrl: newAvatarUrl },
+    //     {
+    //       headers: { Authorization: `Bearer ${token}` },
+    //     }
+    //   );
+
+    //   alert('Аватар успешно обновлен!');
+    //   setUser((prevUser) => prevUser && { ...prevUser, avatarUrl: newAvatarUrl });
+    // } catch (error) {
+    //   console.error('Ошибка при обновлении аватара:', error.response?.data || error.message);
+    //   alert('Не удалось обновить аватар.');
+    // }
+  // };
 
   // Метод для переключения видимости email
   const handleToggleEmailVisibility = async () => {
@@ -124,9 +200,14 @@ const Profile = ({ token }) => {
       {/* Отображение информации о пользователе */}
       {user && (
         <div>
-          <img src={user.avatarUrl || '../../public/default-avatar.png'} alt="Avatar" className="round-img-large" />
+
+          <img src={user.avatarUrl || '../../public/default-avatar.png'}
+            alt={`${user.nickname}'s avatar`}
+            className="round-img-large"
+          />
           <p>Никнейм: {user.nickname}</p>
           <p>Email: {emailVisibility ? user.email : 'Скрыт'}</p>
+
         </div>
       )}
 
@@ -134,7 +215,36 @@ const Profile = ({ token }) => {
       <br></br>
 
       {/* Изменение аватара */}
-      <button onClick={handleUpdateAvatar}>Изменить аватар</button>
+
+      {/* TODO: Прошлая реализация handleUpdateAvatar */}
+      {/* <button onClick={handleUpdateAvatar}>Изменить аватар</button> */}
+      {/* <label htmlFor='avatarInput' className='avatar-upload'>
+        
+        <input
+          id='avatarInput'
+          type='file'
+          accept='image/*'
+          onChange={handleUpdateAvatar}
+        />
+        </label>
+      */}
+
+
+        <form onSubmit={handleSubmitAvatar}>
+          <label htmlFor='avatarInput' className='avatar-upload'>
+            <span>Выбрать файл</span>
+            <input 
+              id='avatarInput'
+              type='file'
+              accept='image/*'
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+          </label>
+          {previewUrl && <img src={previewUrl} alt="Preview" style={{ width: "100px" }} />}
+          <button type='submit'>Загрузить аватар</button>
+        </form>
+
 
       {/* Переключение видимости email */}
       <button onClick={handleToggleEmailVisibility}>Переключить видимость email</button> {/* Строка 70 */}
