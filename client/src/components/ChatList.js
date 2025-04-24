@@ -127,7 +127,7 @@ const ChatList = ({ token }) => {
                     {chat.participants && Array.isArray(chat.participants) ?
 
                       chat.participants.map((participant) => (
-                        <li key={participant.id}>
+                        <li key={participant.id} className="participant-item">
 
                           <img
                             src={participant.avatarUrl || '/default-avatar.png'}
@@ -135,11 +135,13 @@ const ChatList = ({ token }) => {
                             className="round-img"
                           />
 
-                          {participant.nickname}
-       
+                          <span className='participant-nickname'>
+                            {participant.nickname}
+                          </span>
+
                         </li>
                         
-                      )) : null};
+                      )) : null }
 
                   </ul>
 

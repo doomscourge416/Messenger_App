@@ -180,12 +180,12 @@
 }
 
 .participants-section {
-  margin-top: 20px;
+  /* margin-top: 20px; */
 }
 
 .participants-section h3 {
   color: var(--secondary-color);
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .participants-section ul {
@@ -198,6 +198,14 @@
   align-items: center;
   padding: 5px 0;
   color: var(--text-color);
+
+}
+
+.participants-section li strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
 }
 
 .participants-section-footer {

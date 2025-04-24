@@ -124,6 +124,21 @@ nav a:hover {
   margin-top: 5px;
 }
 
+.participant-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.participant-nickname {
+  display: inline-block;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 .chat-item ul li {
   display: flex; /* Используем Flexbox */
   align-items: center; /* Выравнивание по центру по вертикали */
@@ -143,4 +158,64 @@ nav a:hover {
 /* Стили для выбранного чата */
 .selected-chat {
   border-left: 4px solid var(--secondary-color);
+}
+
+@media (max-width: 500px) {
+
+  .notification-container button {
+    margin-right: auto;
+  }
+
+  .input-form {
+
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .input-form img {
+
+    position: absolute;
+    right: 10px;
+    top: 5%;
+  }
+
+  .input-form label {
+    height: 1px;
+  }
+  
+
+  .message-item {
+    flex-direction: column; /* Ставим элементы в столбец */
+    gap: 5px; /* Уменьшаем отступы */
+  }
+
+  .round-img {
+    width: 30px;
+    height: 30px; /* Уменьшаем размер аватара */
+  }
+
+  .nickname {
+    font-size: 14px; /* Уменьшаем размер текста */
+  }
+
+  .file-preview {
+    margin-left: 0; /* Убираем отступы */
+  }
+
+  .read-status {
+    font-size: 12px; /* Уменьшаем размер текста */
+  }
+
+  .participants-section li strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 70%;
+  }
+
+  .search-form input {
+    width: 70%; 
+  }
+
 }

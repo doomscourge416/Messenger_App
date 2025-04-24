@@ -779,6 +779,9 @@ const Chat = () => {
       </form>
 
 
+      <hr />
+
+
       {/* Участники чата */}
       <div className="participants-section">
 
