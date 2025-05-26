@@ -160,8 +160,6 @@ const Chat = () => {
     websocket.connect((data) => {
       console.log('Получено событие WebSocket:', data);
 
-      // TODO: это повтор того, что написано ниже
-
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.chatId === data.chatId ? { ...msg, isRead: true } : msg
@@ -820,10 +818,6 @@ const Chat = () => {
           <p>Нет забаненных участников в этом чате.</p>
         )}
       </ul>
-
-
-      {/* ---------------------- ТЕСТОВЫЙ JSX ---------------------- */}
-
 
 
 

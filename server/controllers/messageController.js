@@ -14,7 +14,6 @@ const isUserBanned = async (chatId, userId) => {
   return chatParticipant?.isBanned || false; // Возвращаем true, если пользователь забанен
 };
 
-// TODO:
 // Отправка сообщения
 exports.sendMessage = async (req, res) => {
   try {
@@ -97,7 +96,6 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-// TODO:
 exports.getMessagesByChat = async (req, res) => {
 
   try {
@@ -140,9 +138,7 @@ exports.getMessagesByChat = async (req, res) => {
       order: [['createdAt', 'ASC']], // Сортируем сообщения по времени
     });
 
-    // TODO: console.log('Загруженные сообщения:', messages); // Лог загруженных сообщений
     res.json({ messages, isBanned });
-    // TODO: console.log('Ответ сервера из getmessagesbychat:', { messages, isBanned });
   } catch (error) {
     console.error('Ошибка при получении сообщений:', error);
     res.status(500).json({ message: 'Ошибка сервера' });

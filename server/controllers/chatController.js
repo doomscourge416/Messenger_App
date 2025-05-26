@@ -49,7 +49,7 @@ exports.createChat = async (req, res) => {
       await chat.addParticipant(participantId);
     }
 
-    // Автоматически добавляем текущего пользователя TODO: Поменять реализацию на нормальную
+    // Автоматически добавляем текущего пользователя
     await chat.addParticipant(userId);
 
 

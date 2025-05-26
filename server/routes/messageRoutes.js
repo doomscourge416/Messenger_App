@@ -26,7 +26,6 @@ router.post('/forward', authMiddleware, messageController.forwardMessage);
 // Загрузка файлов
 // router.post('/send', uploadMiddleware.single('file'), messageController.uploadFile);
 
-// TODO: Позже выяснить какой из двух вариантов необходим 
 // Получение истории пересылок
 router.get('/forwarded/:messageId', authMiddleware, messageController.getForwardedMessages);
 

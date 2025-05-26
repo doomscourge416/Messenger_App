@@ -77,57 +77,6 @@ const Profile = ({ token }) => {
     }
   };
 
-
-
-  //TODO: Метод для изменения аватара
-  // const handleUpdateAvatar = async (event) => {
-  //   try {
-  //     const file = event.target.files[0];
-  //     if (!file) return;
-
-  //     console.log('File в handleUpdateAvatar:', file);
-  
-  //     const formData = new FormData();
-  //     formData.append('avatar', file); // Ключ должен совпадать с ключом, который ожидает multer
-  
-
-  //     const response = await axios.put('/api/user/avatar', formData, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         'Content-Type': 'multipart/form-data',
-  //       },
-  //     });
-  
-  //     alert('Аватар успешно обновлен!');
-  //     setUser((prevUser) => prevUser && { ...prevUser, avatarUrl: response.data.avatarUrl });
-  //   } catch (error) {
-  //     console.error('Ошибка при обновлении аватара:', error.response?.data || error.message);
-  //     alert('Не удалось обновить аватар.');
-  //   }
-    
-    
-    
-    // TODO: Прошлая реализация handleUpdateAvatar
-    // try {
-    //   const newAvatarUrl = prompt('Введите URL аватара:');
-    //   if (!newAvatarUrl) return;
-
-    //   await axios.put(
-    //     '/api/user/avatar',
-    //     { avatarUrl: newAvatarUrl },
-    //     {
-    //       headers: { Authorization: `Bearer ${token}` },
-    //     }
-    //   );
-
-    //   alert('Аватар успешно обновлен!');
-    //   setUser((prevUser) => prevUser && { ...prevUser, avatarUrl: newAvatarUrl });
-    // } catch (error) {
-    //   console.error('Ошибка при обновлении аватара:', error.response?.data || error.message);
-    //   alert('Не удалось обновить аватар.');
-    // }
-  // };
-
   // Метод для переключения видимости email
   const handleToggleEmailVisibility = async () => {
     try {
@@ -215,20 +164,6 @@ const Profile = ({ token }) => {
       <br></br>
 
       {/* Изменение аватара */}
-
-      {/* TODO: Прошлая реализация handleUpdateAvatar */}
-      {/* <button onClick={handleUpdateAvatar}>Изменить аватар</button> */}
-      {/* <label htmlFor='avatarInput' className='avatar-upload'>
-        
-        <input
-          id='avatarInput'
-          type='file'
-          accept='image/*'
-          onChange={handleUpdateAvatar}
-        />
-        </label>
-      */}
-
 
         <form onSubmit={handleSubmitAvatar}>
           <label htmlFor='avatarInput' className='avatar-upload'>

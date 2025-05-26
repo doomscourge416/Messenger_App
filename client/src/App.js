@@ -21,11 +21,6 @@ function App() {
 
   const { playNotificationSound, showNotificationPopup } = useNotification();
 
-  //TODO: 
-  // function notificationFunction() {
-  //   const { playNotificationSound, showNotificationPopup } = useNotification();
-  // };
-
   const [token, setToken] = useState(localStorage.getItem('messengerToken') || null);
   const [userId, setUserId] = useState(localStorage.getItem('userId') || null);
   const [chatId, setChatId] = useState(null);
@@ -33,23 +28,6 @@ function App() {
       
 
   const [isMuted, setIsMuted] = useState(false);
-
-
-  // // Получение настроек уведомлений
-  // useEffect(() => {
-  //   const fetchNotificationSettings = async () => {
-  //     try {
-  //       const response = await axios.get(`/api/notifications/${chatId}`, {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       setIsMuted(response.data.isMuted);
-  //     } catch (error) {
-  //       console.error('Ошибка при получении настроек уведомлений:', error.response?.data || error.message);
-  //     }
-  //   };
-  //   fetchNotificationSettings();
-  // }, [chatId, token]);
-
 
 
   useEffect(() => {
@@ -142,10 +120,6 @@ function App() {
 
   return (
     <NotificationProvider>
-      
-        {/* //TODO:  
-         <notificationFunction />
-        */}
       
         <Header token={token} setToken={setToken} />
 
